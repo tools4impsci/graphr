@@ -19,6 +19,8 @@
     .prose a { color: #3b82f6; text-decoration: underline; }
     .prose strong { font-weight: 600; color: #0f172a; }
     .prose code { background: #e2e8f0; padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.85em; }
+    
+    /* Marquee selection box */
     .selection-box { position: absolute; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1); pointer-events: none; z-index: 50; }
   </style>
 </head>
@@ -28,15 +30,7 @@
   <script type="text/babel">
     const { useState, useRef, useCallback, useEffect, useMemo } = React;
 
-    const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#64748b', '#ec4899'];
-    const COLOR_MAP = {
-      'blue': '#3b82f6', 'emerald': '#10b981', 'green': '#10b981',
-      'violet': '#8b5cf6', 'purple': '#8b5cf6', 'amber': '#f59e0b',
-      'orange': '#f59e0b', 'red': '#ef4444', 'slate': '#64748b',
-      'gray': '#64748b', 'pink': '#ec4899'
-    };
-    const BASE_NODE_RADIUS = 40;
-
+    // --- Icons ---
     const Icon = ({ name, size = 24, className = "" }) => {
       const icons = {
         Plus: <path d="M12 5v14M5 12h14"/>,
@@ -58,6 +52,7 @@
         Wand: <><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8l1.4 1.4"/><path d="M10.8 6.2l1.4 1.4"/><path d="M17.8 6.2l1.4-1.4"/><path d="M10.8 11.8l1.4-1.4"/><path d="m3 21 9-9"/><path d="M12.2 6.2a2 2 0 1 1 2.8 2.8"/></>,
         Grid: <><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="3" x2="21" y1="15" y2="15"/><line x1="9" x2="9" y1="3" y2="21"/><line x1="15" x2="15" y1="3" y2="21"/></>,
         Search: <><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></>,
+        Image: <><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>,
         Box: <><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></>,
         Hexagon: <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></>,
         EyeOff: <><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></>,
@@ -67,18 +62,43 @@
       return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{icons[name]}</svg>;
     };
 
+    // --- Constants & Defaults ---
+    const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#64748b', '#ec4899'];
+    const COLOR_MAP = {
+      'blue': '#3b82f6', 'emerald': '#10b981', 'green': '#10b981',
+      'violet': '#8b5cf6', 'purple': '#8b5cf6', 'amber': '#f59e0b',
+      'orange': '#f59e0b', 'red': '#ef4444', 'slate': '#64748b',
+      'gray': '#64748b', 'pink': '#ec4899'
+    };
+    const BASE_NODE_RADIUS = 40;
+    
+    const INITIAL_NODES = [
+      { id: '1', label: 'Artificial Intelligence', x: 0, y: -150, color: '#3b82f6', shape: 'diamond', notes: '**AI** is the simulation of human intelligence processes by machines.' },
+      { id: '2', label: 'Machine Learning', x: -150, y: 50, color: '#10b981', shape: 'rect', notes: 'Algorithms that improve automatically.' },
+      { id: '3', label: 'Deep Learning', x: -300, y: 200, color: '#10b981', shape: 'circle', notes: 'Neural networks with multiple layers.' },
+      { id: '4', label: 'Knowledge Graphs', x: 150, y: 50, color: '#8b5cf6', shape: 'rect', notes: 'Structural representation of facts.' },
+      { id: '5', label: 'NLP', x: -50, y: 200, color: '#f59e0b', shape: 'circle', notes: 'Natural Language Processing.' },
+      { id: '6', label: 'Semantic Web', x: 300, y: 200, color: '#8b5cf6', shape: 'circle', notes: 'Extension of WWW by W3C.' }
+    ];
+
+    const INITIAL_EDGES = [
+      { id: 'e1', source: '1', target: '2', label: 'includes', weight: 2, style: 'solid' },
+      { id: 'e2', source: '2', target: '3', label: 'includes', weight: 3, style: 'solid' },
+      { id: 'e3', source: '1', target: '4', label: 'enhanced by', weight: 3, style: 'solid' },
+      { id: 'e4', source: '1', target: '5', label: 'includes', weight: 2, style: 'solid' },
+      { id: 'e5', source: '4', target: '6', label: 'foundation of', weight: 2, style: 'solid' },
+      { id: 'e6', source: '5', target: '4', label: 'extracts entities', weight: 1, style: 'dashed' },
+      { id: 'e7', source: '4', target: '4', label: 'updates self', weight: 1, style: 'dotted' },
+      { id: 'e8', source: '4', target: '1', label: 'informs', weight: 2, style: 'solid' } 
+    ];
+
     function KnowledgeGraphApp() {
+      // --- Initialization ---
       const loadState = (k, f) => { try { const i = localStorage.getItem(k); return i ? JSON.parse(i) : f; } catch (e) { return f; } };
+      const [nodes, setNodes] = useState(() => loadState('kg_nodes_v2', INITIAL_NODES));
+      const [edges, setEdges] = useState(() => loadState('kg_edges_v2', INITIAL_EDGES));
       
-      const [nodes, setNodes] = useState(() => loadState('kg_nodes_pro', [
-        { id: '1', label: 'AI', x: 0, y: -100, color: '#3b82f6', shape: 'diamond', notes: 'Core concept.' },
-        { id: '2', label: 'Graphs', x: 100, y: 100, color: '#10b981', shape: 'rect', notes: 'Data structures.' }
-      ]));
-      const [edges, setEdges] = useState(() => loadState('kg_edges_pro', [
-        { id: 'e1', source: '1', target: '2', label: 'relates to', weight: 1, style: 'solid' }
-      ]));
-      
-      const [history, setHistory] = useState([{ nodes: JSON.parse(JSON.stringify(nodes)), edges: JSON.parse(JSON.stringify(edges)) }]);
+      const [history, setHistory] = useState([{ nodes: loadState('kg_nodes_v2', INITIAL_NODES), edges: loadState('kg_edges_v2', INITIAL_EDGES) }]);
       const [historyIndex, setHistoryIndex] = useState(0);
 
       const pushHistory = (newNodes, newEdges) => {
@@ -86,23 +106,692 @@
         nextHistory.push({ nodes: JSON.parse(JSON.stringify(newNodes)), edges: JSON.parse(JSON.stringify(newEdges)) });
         setHistory(nextHistory);
         setHistoryIndex(nextHistory.length - 1);
-        localStorage.setItem('kg_nodes_pro', JSON.stringify(newNodes));
-        localStorage.setItem('kg_edges_pro', JSON.stringify(newEdges));
+        localStorage.setItem('kg_nodes_v2', JSON.stringify(newNodes));
+        localStorage.setItem('kg_edges_v2', JSON.stringify(newEdges));
       };
 
-      // --- Interaction Hooks ---
+      const undo = () => { if (historyIndex > 0) { setHistoryIndex(i => i - 1); setNodes(history[historyIndex - 1].nodes); setEdges(history[historyIndex - 1].edges); } };
+      const redo = () => { if (historyIndex < history.length - 1) { setHistoryIndex(i => i + 1); setNodes(history[historyIndex + 1].nodes); setEdges(history[historyIndex + 1].edges); } };
+
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); }
+          if (e.key === 'Backspace' || e.key === 'Delete') {
+             if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                deleteSelected();
+             }
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [historyIndex, history]);
+
+      // --- App State ---
       const [transform, setTransform] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2, scale: 1 });
       const [mode, setMode] = useState('select');
+      const [connectingFrom, setConnectingFrom] = useState(null);
+      
       const [selectedNodeIds, setSelectedNodeIds] = useState([]);
       const [selectedEdgeId, setSelectedEdgeId] = useState(null);
       const [searchQuery, setSearchQuery] = useState("");
+      const [snapToGrid, setSnapToGrid] = useState(false);
+      const [markdownMode, setMarkdownMode] = useState(true);
       
-      // ... existing state/logic ...
+      const [marquee, setMarquee] = useState(null);
+      const [contextMenu, setContextMenu] = useState(null);
       
+      const svgRef = useRef(null);
+      const requestRef = useRef(null);
+      const lastMousePos = useRef({ x: 0, y: 0 });
+      const dragHasMoved = useRef(false);
+      const [isDraggingNode, setIsDraggingNode] = useState(false);
+      const [isPanning, setIsPanning] = useState(false);
+      const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+      // --- Query Engine ---
+      const filteredNodesMap = useMemo(() => {
+        if (!searchQuery.trim()) return new Set(nodes.map(n => n.id)); // All visible
+        
+        try {
+            const tokens = searchQuery.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+            let resultNodes = [...nodes];
+
+            for (let token of tokens) {
+                token = token.replace(/(^"|"$)/g, ''); // strip quotes
+                const colonIdx = token.indexOf(':');
+
+                if (colonIdx > 0) {
+                    const key = token.substring(0, colonIdx).toLowerCase();
+                    const value = token.substring(colonIdx + 1).toLowerCase();
+
+                    if (key === 'label') {
+                        resultNodes = resultNodes.filter(n => n.label.toLowerCase().includes(value));
+                    } else if (key === 'notes') {
+                        resultNodes = resultNodes.filter(n => (n.notes||'').toLowerCase().includes(value));
+                    } else if (key === 'shape') {
+                        resultNodes = resultNodes.filter(n => n.shape === value);
+                    } else if (key === 'color') {
+                        const hexValue = COLOR_MAP[value] || value;
+                        resultNodes = resultNodes.filter(n => n.color === hexValue);
+                    } else if (key === 'edge') {
+                        const matchingEdges = edges.filter(e => (e.label||'').toLowerCase().includes(value));
+                        const connectedNodeIds = new Set(matchingEdges.flatMap(e => [e.source, e.target]));
+                        resultNodes = resultNodes.filter(n => connectedNodeIds.has(n.id));
+                    } else if (key === 'links') {
+                        const targetNodes = nodes.filter(n => n.label.toLowerCase().includes(value)).map(n => n.id);
+                        const matchingEdges = edges.filter(e => targetNodes.includes(e.source) || targetNodes.includes(e.target));
+                        const connectedNodeIds = new Set(matchingEdges.flatMap(e => [e.source, e.target]));
+                        resultNodes = resultNodes.filter(n => connectedNodeIds.has(n.id));
+                    }
+                } else {
+                    const lowerToken = token.toLowerCase();
+                    resultNodes = resultNodes.filter(n =>
+                        n.label.toLowerCase().includes(lowerToken) ||
+                        (n.notes||'').toLowerCase().includes(lowerToken)
+                    );
+                }
+            }
+            return new Set(resultNodes.map(n => n.id));
+        } catch(e) {
+            return new Set(nodes.map(n => n.id)); // Fallback if parse fails
+        }
+      }, [searchQuery, nodes, edges]);
+
+      const isQueryActive = searchQuery.trim() !== "";
+
+      // --- Helpers ---
+      const getNodeRadius = (nodeId) => {
+        const degree = edges.filter(e => e.source === nodeId || e.target === nodeId).length;
+        return BASE_NODE_RADIUS + (degree * 4);
+      };
+
+      const visibleNodesMap = useMemo(() => {
+        const map = new Set(nodes.map(n => n.id));
+        const collapsedNodes = nodes.filter(n => n.collapsed).map(n => n.id);
+        collapsedNodes.forEach(parentId => {
+           edges.filter(e => e.source === parentId).forEach(e => {
+              if (e.target !== parentId) map.delete(e.target);
+           });
+        });
+        return map;
+      }, [nodes, edges]);
+
+      const visibleNodes = nodes.filter(n => visibleNodesMap.has(n.id));
+      const visibleEdges = edges.filter(e => visibleNodesMap.has(e.source) && visibleNodesMap.has(e.target));
+
+      const screenToSvg = (clientX, clientY) => {
+         return {
+            x: (clientX - transform.x) / transform.scale,
+            y: (clientY - transform.y) / transform.scale
+         };
+      };
+
+      // --- Event Handlers ---
+      const handleWheel = useCallback((e) => {
+        const scaleAdj = e.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = Math.max(0.05, Math.min(transform.scale * scaleAdj, 4));
+        setTransform(prev => ({
+          x: e.clientX - (e.clientX - prev.x) * (newScale / prev.scale),
+          y: e.clientY - (e.clientY - prev.y) * (newScale / prev.scale),
+          scale: newScale
+        }));
+      }, [transform]);
+
+      const handlePointerDown = (e) => {
+        if (contextMenu) setContextMenu(null);
+
+        if (e.target.tagName === 'svg' || e.target.id === 'bg-grid') {
+          if (e.shiftKey) {
+             const pos = screenToSvg(e.clientX, e.clientY);
+             setMarquee({ startX: pos.x, startY: pos.y, endX: pos.x, endY: pos.y });
+          } else {
+             lastMousePos.current = { x: e.clientX, y: e.clientY };
+             setIsPanning(true);
+             setSelectedNodeIds([]);
+             setSelectedEdgeId(null);
+             if (mode === 'connect') { setMode('select'); setConnectingFrom(null); }
+          }
+        }
+      };
+
+      const handlePointerMove = (e) => {
+        const clientX = e.clientX; const clientY = e.clientY;
+
+        if (marquee) {
+           const pos = screenToSvg(clientX, clientY);
+           setMarquee(prev => ({ ...prev, endX: pos.x, endY: pos.y }));
+           return;
+        }
+
+        if (!isPanning && !isDraggingNode && !(mode === 'connect' && connectingFrom)) return;
+        if (requestRef.current) cancelAnimationFrame(requestRef.current);
+
+        requestRef.current = requestAnimationFrame(() => {
+          const dx = clientX - lastMousePos.current.x;
+          const dy = clientY - lastMousePos.current.y;
+          lastMousePos.current = { x: clientX, y: clientY };
+
+          if (mode === 'connect' && connectingFrom) {
+            setMousePos(screenToSvg(clientX, clientY));
+          }
+
+          if (isPanning) {
+            setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
+          } else if (isDraggingNode && mode === 'select') {
+            dragHasMoved.current = true;
+            setNodes(prev => prev.map(n => {
+              if (!selectedNodeIds.includes(n.id)) return n;
+              let newX = n.x + (dx / transform.scale);
+              let newY = n.y + (dy / transform.scale);
+              if (snapToGrid) { newX = Math.round(newX/40)*40; newY = Math.round(newY/40)*40; }
+              return { ...n, x: newX, y: newY };
+            }));
+          }
+        });
+      };
+
+      const handlePointerUp = () => {
+        if (marquee) {
+           const xMin = Math.min(marquee.startX, marquee.endX);
+           const xMax = Math.max(marquee.startX, marquee.endX);
+           const yMin = Math.min(marquee.startY, marquee.endY);
+           const yMax = Math.max(marquee.startY, marquee.endY);
+           
+           const selected = visibleNodes.filter(n => n.x >= xMin && n.x <= xMax && n.y >= yMin && n.y <= yMax).map(n => n.id);
+           setSelectedNodeIds(selected);
+           setMarquee(null);
+        } else if (isDraggingNode && dragHasMoved.current) {
+          pushHistory(nodes, edges);
+        }
+        setIsPanning(false);
+        setIsDraggingNode(false);
+        dragHasMoved.current = false;
+      };
+
+      const handleNodePointerDown = (e, nodeId) => {
+        e.stopPropagation();
+        if (e.button === 2) return; 
+        if (contextMenu) setContextMenu(null);
+
+        lastMousePos.current = { x: e.clientX, y: e.clientY };
+        dragHasMoved.current = false;
+        
+        if (mode === 'connect') {
+          if (!connectingFrom) {
+            setConnectingFrom(nodeId);
+            setMousePos(screenToSvg(e.clientX, e.clientY));
+          } else {
+            const newEdge = { id: `e_${Date.now()}`, source: connectingFrom, target: nodeId, label: 'relates to', weight: 1, style: 'solid' };
+            const newEdges = [...edges, newEdge];
+            setEdges(newEdges);
+            pushHistory(nodes, newEdges);
+            if (e.shiftKey) setConnectingFrom(nodeId); 
+            else setConnectingFrom(null);
+          }
+        } else {
+          if (e.shiftKey) {
+             if (selectedNodeIds.includes(nodeId)) setSelectedNodeIds(selectedNodeIds.filter(id => id !== nodeId));
+             else setSelectedNodeIds([...selectedNodeIds, nodeId]);
+          } else {
+             if (!selectedNodeIds.includes(nodeId)) setSelectedNodeIds([nodeId]);
+          }
+          
+          setSelectedEdgeId(null);
+          setIsDraggingNode(true);
+          
+          setNodes(prev => {
+            const selected = prev.filter(n => selectedNodeIds.includes(n.id) || n.id === nodeId);
+            const others = prev.filter(n => !selectedNodeIds.includes(n.id) && n.id !== nodeId);
+            return [...others, ...selected];
+          });
+        }
+      };
+
+      const handleNodeDoubleClick = (e, nodeId) => {
+         e.stopPropagation();
+         const newNodes = nodes.map(n => n.id === nodeId ? { ...n, collapsed: !n.collapsed } : n);
+         setNodes(newNodes);
+         pushHistory(newNodes, edges);
+      };
+
+      const handleContextMenu = (e, nodeId) => {
+         e.preventDefault();
+         e.stopPropagation();
+         setSelectedNodeIds([nodeId]);
+         setContextMenu({ x: e.clientX, y: e.clientY, nodeId });
+      };
+
+      // --- Actions ---
+      const addNode = (xOffset = 0, yOffset = 0) => {
+        const x = (window.innerWidth / 2 - transform.x) / transform.scale + xOffset;
+        const y = (window.innerHeight / 2 - transform.y) / transform.scale + yOffset;
+        const newNode = { id: `n_${Date.now()}`, label: 'New Concept', x: snapToGrid ? Math.round(x/40)*40 : x, y: snapToGrid ? Math.round(y/40)*40 : y, color: COLORS[0], shape: 'circle', notes: '' };
+        const newNodes = [...nodes, newNode];
+        setNodes(newNodes); pushHistory(newNodes, edges);
+        setSelectedNodeIds([newNode.id]); setMode('select');
+        return newNode;
+      };
+
+      const deleteSelected = () => {
+        if (selectedNodeIds.length > 0) {
+          const newNodes = nodes.filter(n => !selectedNodeIds.includes(n.id));
+          const newEdges = edges.filter(e => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target));
+          setNodes(newNodes); setEdges(newEdges); pushHistory(newNodes, newEdges);
+          setSelectedNodeIds([]); setContextMenu(null);
+        } else if (selectedEdgeId) {
+          const newEdges = edges.filter(e => e.id !== selectedEdgeId);
+          setEdges(newEdges); pushHistory(nodes, newEdges);
+          setSelectedEdgeId(null);
+        }
+      };
+
+      const duplicateNode = (nodeId) => {
+         const sourceNode = nodes.find(n => n.id === nodeId);
+         if (!sourceNode) return;
+         const newNode = { ...sourceNode, id: `n_${Date.now()}`, x: sourceNode.x + 50, y: sourceNode.y + 50 };
+         const newNodes = [...nodes, newNode];
+         setNodes(newNodes); pushHistory(newNodes, edges);
+         setSelectedNodeIds([newNode.id]); setContextMenu(null);
+      };
+
+      const exportPNG = () => {
+         const svgString = new XMLSerializer().serializeToString(svgRef.current);
+         const canvas = document.createElement("canvas");
+         const cleanSvgString = svgString.replace(/<rect id="bg-grid"[\s\S]*?\/>/, '');
+         
+         const img = new Image();
+         const svg = new Blob([cleanSvgString], {type: "image/svg+xml;charset=utf-8"});
+         const url = URL.createObjectURL(svg);
+         img.onload = function() {
+            canvas.width = window.innerWidth * 2;
+            canvas.height = window.innerHeight * 2;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#f8fafc"; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.scale(2, 2);
+            ctx.drawImage(img, 0, 0);
+            const png = canvas.toDataURL("image/png");
+            const a = document.createElement("a");
+            a.download = `knowledge-graph-${Date.now()}.png`;
+            a.href = png;
+            a.click();
+            URL.revokeObjectURL(url);
+         };
+         img.src = url;
+      };
+
+      // --- Render Math Helpers ---
+      const renderPath = (edge, isSelected) => {
+         const sourceNode = nodes.find(n => n.id === edge.source);
+         const targetNode = nodes.find(n => n.id === edge.target);
+         if (!sourceNode || !targetNode) return null;
+
+         // Dimming logic for queries
+         const isDimmedEdge = isQueryActive && (!filteredNodesMap.has(sourceNode.id) || !filteredNodesMap.has(targetNode.id));
+
+         const strokeW = isSelected ? Math.max(3, (edge.weight || 1) * 1.5 + 1) : (edge.weight || 1) * 1.5;
+         const edgeColor = isSelected ? '#3b82f6' : '#cbd5e1';
+         const dashArray = edge.style === 'dashed' ? '8 6' : edge.style === 'dotted' ? '2 6' : 'none';
+         const strokeLinecap = edge.style === 'dotted' ? 'round' : 'butt';
+
+         // Self-referential loop
+         if (sourceNode.id === targetNode.id) {
+            const r = getNodeRadius(sourceNode.id);
+            const startX = sourceNode.x - r/3;
+            const startY = sourceNode.y - r;
+            const endX = sourceNode.x + r/3;
+            const endY = sourceNode.y - r;
+            const pathData = `M ${startX} ${startY} C ${sourceNode.x - r*2.5} ${sourceNode.y - r*3.5}, ${sourceNode.x + r*2.5} ${sourceNode.y - r*3.5}, ${endX} ${endY}`;
+            
+            const arrowSize = 8 + strokeW;
+            const arrowP1 = `${endX},${endY}`;
+            const arrowP2 = `${endX + arrowSize * 0.8},${endY - arrowSize * 0.5}`;
+            const arrowP3 = `${endX + arrowSize * 0.2},${endY - arrowSize * 1.2}`;
+
+            return (
+               <g key={edge.id} onClick={(e) => { e.stopPropagation(); if (mode==='select') { setSelectedEdgeId(edge.id); setSelectedNodeIds([]); } }} className={`cursor-pointer group transition-opacity duration-300 ${isDimmedEdge ? 'opacity-10' : 'opacity-100'}`}>
+                  <path d={pathData} fill="none" stroke="transparent" strokeWidth="20" />
+                  <path d={pathData} fill="none" stroke={edgeColor} strokeWidth={strokeW} strokeDasharray={dashArray} strokeLinecap={strokeLinecap} className="transition-colors duration-200" />
+                  <polygon points={`${arrowP1} ${arrowP2} ${arrowP3}`} fill={edgeColor} className="transition-colors duration-200" />
+                  {edge.label && (
+                     <g transform={`translate(${sourceNode.x}, ${sourceNode.y - r*2.5})`}>
+                        <text textAnchor="middle" dominantBaseline="central" fontSize="11" stroke="#f8fafc" strokeWidth="4" className="font-bold opacity-90">{edge.label}</text>
+                        <text textAnchor="middle" dominantBaseline="central" fontSize="11" fill={isSelected ? '#1d4ed8' : '#64748b'} className="font-bold">{edge.label}</text>
+                     </g>
+                  )}
+               </g>
+            );
+         }
+
+         // Standard / Bidirectional Edge
+         const dx = targetNode.x - sourceNode.x;
+         const dy = targetNode.y - sourceNode.y;
+         const distance = Math.sqrt(dx * dx + dy * dy);
+         if (distance === 0) return null;
+
+         const sRadius = getNodeRadius(sourceNode.id) + 3;
+         const tRadius = getNodeRadius(targetNode.id) + 3; 
+         
+         const nx = -dy / distance;
+         const ny = dx / distance;
+         
+         // Bidirectional Check
+         const isBidi = edges.some(e => e.source === targetNode.id && e.target === sourceNode.id);
+         let curveOffset = distance * 0.15; 
+         if (isBidi) {
+            curveOffset = 40; 
+            if (sourceNode.id > targetNode.id) curveOffset = -40; 
+         }
+
+         const midX = (sourceNode.x + targetNode.x) / 2;
+         const midY = (sourceNode.y + targetNode.y) / 2;
+         const cpX = midX + nx * curveOffset;
+         const cpY = midY + ny * curveOffset;
+
+         const srcAngle = Math.atan2(cpY - sourceNode.y, cpX - sourceNode.x);
+         const tgtAngle = Math.atan2(cpY - targetNode.y, cpX - targetNode.x);
+
+         let startX = sourceNode.x + sRadius * Math.cos(srcAngle);
+         let startY = sourceNode.y + sRadius * Math.sin(srcAngle);
+         let endX = targetNode.x + tRadius * Math.cos(tgtAngle);
+         let endY = targetNode.y + tRadius * Math.sin(tgtAngle);
+
+         if (sourceNode.shape === 'rect' || sourceNode.shape === 'diamond') {
+            startX = sourceNode.x + (sRadius * 0.85) * Math.cos(srcAngle);
+            startY = sourceNode.y + (sRadius * 0.85) * Math.sin(srcAngle);
+         }
+         if (targetNode.shape === 'rect' || targetNode.shape === 'diamond') {
+            endX = targetNode.x + (tRadius * 0.85) * Math.cos(tgtAngle);
+            endY = targetNode.y + (tRadius * 0.85) * Math.sin(tgtAngle);
+         }
+
+         const labelX = 0.25 * startX + 0.5 * cpX + 0.25 * endX;
+         const labelY = 0.25 * startY + 0.5 * cpY + 0.25 * endY;
+         const pathData = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`;
+         
+         const arrowSize = 8 + strokeW * 1.5;
+         const arrowAngle = tgtAngle + Math.PI; 
+         const arrowP1 = `${endX},${endY}`;
+         const arrowP2 = `${endX - arrowSize * Math.cos(arrowAngle - 0.4)},${endY - arrowSize * Math.sin(arrowAngle - 0.4)}`;
+         const arrowP3 = `${endX - arrowSize * Math.cos(arrowAngle + 0.4)},${endY - arrowSize * Math.sin(arrowAngle + 0.4)}`;
+
+         return (
+            <g key={edge.id} onClick={(e) => { e.stopPropagation(); if (mode==='select') { setSelectedEdgeId(edge.id); setSelectedNodeIds([]); } }} className={`cursor-pointer group transition-opacity duration-300 ${isDimmedEdge ? 'opacity-10' : 'opacity-100'}`}>
+               <path d={pathData} fill="none" stroke="transparent" strokeWidth="25" />
+               <path d={pathData} fill="none" stroke={edgeColor} strokeWidth={strokeW} strokeDasharray={dashArray} strokeLinecap={strokeLinecap} className="transition-colors duration-200" />
+               <polygon points={`${arrowP1} ${arrowP2} ${arrowP3}`} fill={edgeColor} className="transition-colors duration-200" />
+               {edge.label && (
+               <g transform={`translate(${labelX}, ${labelY})`}>
+                  <text textAnchor="middle" dominantBaseline="central" fontSize="11" stroke="#f8fafc" strokeWidth="4" strokeLinejoin="round" className="font-bold pointer-events-none opacity-90 transition-opacity duration-200 group-hover:opacity-100">{edge.label.length > 18 ? edge.label.substring(0, 16) + '...' : edge.label}</text>
+                  <text textAnchor="middle" dominantBaseline="central" fontSize="11" fill={isSelected ? '#1d4ed8' : '#64748b'} className="font-bold pointer-events-none transition-colors duration-200 group-hover:fill-slate-600">{edge.label.length > 18 ? edge.label.substring(0, 16) + '...' : edge.label}</text>
+               </g>
+               )}
+            </g>
+         );
+      };
+
+      const renderNodeShape = (node, radius, isSelected) => {
+         const strokeW = isSelected ? 5 : 3;
+         const fill = "white";
+         if (node.shape === 'rect') {
+            const size = radius * 1.6;
+            return <rect x={-size/2} y={-size/2} width={size} height={size} rx={8} fill={fill} stroke={node.color} strokeWidth={strokeW} filter="url(#shadow)" className="transition-colors duration-200" />;
+         }
+         if (node.shape === 'diamond') {
+            const size = radius * 1.2;
+            return <polygon points={`0,-${size} ${size},0 0,${size} -${size},0`} fill={fill} stroke={node.color} strokeWidth={strokeW} filter="url(#shadow)" strokeLinejoin="round" className="transition-colors duration-200" />;
+         }
+         return <circle r={radius} fill={fill} stroke={node.color} strokeWidth={strokeW} filter="url(#shadow)" className="transition-colors duration-200" />;
+      };
+
+      // --- UI Variables ---
+      const activeNode = selectedNodeIds.length === 1 ? nodes.find(n => n.id === selectedNodeIds[0]) : null;
+      const activeEdge = edges.find(e => e.id === selectedEdgeId);
+
       return (
-        <div className="flex h-screen w-screen bg-slate-50 overflow-hidden font-sans text-slate-800">
-           {/* UI Implementation... */}
-           <div className="text-center p-10">Application Initialized. Knowledge Graph Pro is ready.</div>
+        <div className="flex h-screen w-screen bg-slate-50 overflow-hidden font-sans text-slate-800" onContextMenu={e => e.preventDefault()}>
+          
+          {/* TOP TOOLBAR */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 items-center bg-white p-2 rounded-2xl shadow-md border border-slate-200">
+             
+             {/* QUERY ENGINE BAR */}
+             <div className="relative group flex items-center">
+                <Icon name="Terminal" size={16} className="absolute left-3 text-slate-400" />
+                <input 
+                   type="text" 
+                   placeholder="Search or write query..." 
+                   value={searchQuery} 
+                   onChange={e => setSearchQuery(e.target.value)} 
+                   className="pl-9 pr-16 py-1.5 bg-slate-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500 w-72 transition-all font-medium text-slate-700 placeholder:text-slate-400" 
+                />
+                
+                {/* SELECT RESULTS BUTTON */}
+                {isQueryActive && (
+                   <button 
+                      onClick={() => setSelectedNodeIds(Array.from(filteredNodesMap))}
+                      className="absolute right-1.5 py-0.5 px-2 bg-blue-100 text-blue-600 rounded text-[11px] font-bold hover:bg-blue-200 transition-colors"
+                   >
+                      Select
+                   </button>
+                )}
+
+                {/* QUERY HELPER DROPDOWN */}
+                <div className="absolute top-full mt-3 left-0 w-[340px] bg-white shadow-xl rounded-xl border border-slate-200 p-4 hidden group-focus-within:block text-xs text-slate-600 z-50">
+                   <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-1.5"><Icon name="Search" size={14}/> Graph Query Engine</h3>
+                   <p className="mb-3 text-slate-500">Filter the graph dynamically. Combine terms with spaces.</p>
+                   <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <div><code className="text-blue-600 bg-blue-50">shape:rect</code> <span className="ml-1">Match shapes</span></div>
+                      <div><code className="text-blue-600 bg-blue-50">color:blue</code> <span className="ml-1">Match colors</span></div>
+                      <div><code className="text-emerald-600 bg-emerald-50">edge:includes</code> <span className="ml-1">Match edge</span></div>
+                      <div><code className="text-emerald-600 bg-emerald-50">links:AI</code> <span className="ml-1">Target link</span></div>
+                      <div><code className="text-slate-600 bg-slate-100">label:Web</code> <span className="ml-1">Exact label</span></div>
+                      <div><code className="text-slate-600 bg-slate-100">"exact term"</code> <span className="ml-1">Use quotes</span></div>
+                   </div>
+                   <div className="mt-3 pt-3 border-t border-slate-100 text-slate-400">
+                      Example: <code className="text-slate-500">shape:circle links:"Deep Learning"</code>
+                   </div>
+                </div>
+             </div>
+
+             <div className="w-px h-6 bg-slate-200 mx-1"></div>
+             <button onClick={undo} disabled={historyIndex === 0} className={`p-2 rounded-lg transition-colors ${historyIndex === 0 ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'}`} title="Undo (Ctrl+Z)"><Icon name="Undo" size={18} /></button>
+             <button onClick={redo} disabled={historyIndex === history.length - 1} className={`p-2 rounded-lg transition-colors ${historyIndex === history.length - 1 ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'}`} title="Redo (Ctrl+Y)"><Icon name="Redo" size={18} /></button>
+             <div className="w-px h-6 bg-slate-200 mx-1"></div>
+             <button onClick={() => setSnapToGrid(!snapToGrid)} className={`p-2 rounded-lg transition-colors ${snapToGrid ? 'bg-blue-100 text-blue-600' : 'text-slate-600 hover:bg-slate-100'}`} title="Snap to Grid"><Icon name="Grid" size={18} /></button>
+             <div className="w-px h-6 bg-slate-200 mx-1"></div>
+             <button onClick={exportPNG} className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors" title="Export PNG Image"><Icon name="Image" size={18} /></button>
+          </div>
+
+          {/* LEFT TOOLBAR */}
+          <div className="absolute left-6 top-6 z-10 flex flex-col gap-4 bg-white p-2 rounded-2xl shadow-xl border border-slate-100">
+            <div className="flex flex-col gap-2">
+              <button onClick={() => { setMode('select'); setConnectingFrom(null); }} className={`p-3 rounded-xl transition-all ${mode === 'select' ? 'bg-blue-100 text-blue-600 shadow-inner' : 'text-slate-500 hover:bg-slate-100'}`} title="Select & Move Tool (Shift+Drag to multi-select)"><Icon name="MousePointer2" size={24} /></button>
+              <button onClick={() => setMode('connect')} className={`p-3 rounded-xl transition-all ${mode === 'connect' ? 'bg-amber-100 text-amber-600 shadow-inner' : 'text-slate-500 hover:bg-slate-100'}`} title="Connect Nodes Tool"><Icon name="LinkIcon" size={24} /></button>
+            </div>
+            <div className="h-px bg-slate-100 my-1 w-full"></div>
+            <button onClick={() => addNode()} className="p-3 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm" title="Add New Node"><Icon name="Plus" size={24} /></button>
+          </div>
+
+          {/* MAIN CANVAS */}
+          <main 
+            className="flex-1 relative outline-none"
+            onWheel={handleWheel}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            style={{ cursor: mode === 'connect' ? 'crosshair' : (isPanning ? 'grabbing' : 'grab') }}
+          >
+            <svg ref={svgRef} className="w-full h-full">
+              <defs>
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="6" floodOpacity="0.15" /></filter>
+                {snapToGrid && <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1.5" fill="#cbd5e1" /></pattern>}
+              </defs>
+
+              <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.scale})`}>
+                {snapToGrid && <rect id="bg-grid" x="-50000" y="-50000" width="100000" height="100000" fill="url(#grid)" />}
+
+                {/* EDGES */}
+                {visibleEdges.map(edge => renderPath(edge, selectedEdgeId === edge.id))}
+
+                {/* TEMPORARY CONNECTION LINE */}
+                {mode === 'connect' && connectingFrom && (
+                  (() => {
+                    const src = nodes.find(n => n.id === connectingFrom);
+                    if (!src) return null;
+                    return <line x1={src.x} y1={src.y} x2={mousePos.x} y2={mousePos.y} stroke="#f59e0b" strokeWidth="3" strokeDasharray="6 6" className="pointer-events-none" />;
+                  })()
+                )}
+
+                {/* NODES */}
+                {visibleNodes.map(node => {
+                  const isSelected = selectedNodeIds.includes(node.id);
+                  const isConnecting = connectingFrom === node.id;
+                  const isDimmed = isQueryActive && !filteredNodesMap.has(node.id);
+                  const radius = getNodeRadius(node.id);
+                  
+                  return (
+                    <g 
+                      key={node.id} transform={`translate(${node.x}, ${node.y})`}
+                      onPointerDown={(e) => handleNodePointerDown(e, node.id)}
+                      onDoubleClick={(e) => handleNodeDoubleClick(e, node.id)}
+                      onContextMenu={(e) => handleContextMenu(e, node.id)}
+                      className={`${mode === 'select' ? 'cursor-grab active:cursor-grabbing' : 'cursor-crosshair'} transition-opacity duration-300 ${isDimmed ? 'opacity-10' : 'opacity-100'}`}
+                    >
+                      {(isSelected || isConnecting) && <circle r={radius + 12} fill="none" stroke={isConnecting ? '#f59e0b' : '#3b82f6'} strokeWidth="3" strokeDasharray="4 4" className="animate-[spin_4s_linear_infinite]" />}
+                      {renderNodeShape(node, radius, isSelected)}
+                      <foreignObject x={-radius + 5} y={-radius + 5} width={(radius - 5) * 2} height={(radius - 5) * 2} className="pointer-events-none">
+                        <div className="w-full h-full flex flex-col items-center justify-center text-center px-1">
+                          <span className="text-xs font-semibold break-words line-clamp-3 select-none" style={{ color: '#1e293b' }}>{node.label}</span>
+                          {node.collapsed && <div className="mt-1 bg-slate-800 text-white text-[8px] px-1.5 py-0.5 rounded-full">+</div>}
+                        </div>
+                      </foreignObject>
+                    </g>
+                  );
+                })}
+              </g>
+            </svg>
+            
+            {/* HTML OVERLAYS (Marquee & Context Menu) */}
+            {marquee && (
+               <div className="selection-box" style={{
+                  left: Math.min(marquee.startX * transform.scale + transform.x, marquee.endX * transform.scale + transform.x),
+                  top: Math.min(marquee.startY * transform.scale + transform.y, marquee.endY * transform.scale + transform.y),
+                  width: Math.abs(marquee.endX - marquee.startX) * transform.scale,
+                  height: Math.abs(marquee.endY - marquee.startY) * transform.scale
+               }}/>
+            )}
+
+            {contextMenu && (
+               <div className="absolute z-50 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 py-2 text-sm text-slate-700 animate-in fade-in zoom-in-95 duration-100" style={{ left: contextMenu.x, top: contextMenu.y }}>
+                  <button onClick={() => { setMode('connect'); setConnectingFrom(contextMenu.nodeId); setContextMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2"><Icon name="LinkIcon" size={16}/> Connect</button>
+                  <button onClick={() => duplicateNode(contextMenu.nodeId)} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2"><Icon name="Copy" size={16}/> Duplicate</button>
+                  <div className="h-px bg-slate-100 my-1"></div>
+                  <button onClick={() => handleNodeDoubleClick({stopPropagation:()=>{}}, contextMenu.nodeId)} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2"><Icon name="EyeOff" size={16}/> Toggle Collapse</button>
+                  <button onClick={() => deleteSelected()} className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2"><Icon name="Trash2" size={16}/> Delete</button>
+               </div>
+            )}
+          </main>
+
+          {/* RIGHT SIDEBAR - PROPERTIES */}
+          <aside className={`bg-white border-l border-slate-200 shadow-2xl transition-all duration-300 ease-in-out z-20 flex flex-col ${(selectedNodeIds.length > 0 || selectedEdgeId) ? 'w-80 translate-x-0' : 'w-0 translate-x-full overflow-hidden border-transparent'}`}>
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 min-w-[320px]">
+              <h2 className="font-semibold text-slate-800 flex items-center gap-2"><Icon name="Settings2" size={18} className="text-slate-500" /> Properties</h2>
+              <button onClick={deleteSelected} className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors"><Icon name="Trash2" size={18} /></button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 min-w-[320px]">
+              {/* MULTI-SELECT VIEW */}
+              {selectedNodeIds.length > 1 && (
+                 <div className="space-y-4 text-center py-8">
+                    <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4"><Icon name="Box" size={32} /></div>
+                    <h3 className="font-bold text-slate-700">{selectedNodeIds.length} Nodes Selected</h3>
+                    <p className="text-sm text-slate-500">Drag to move them together, or press delete to remove them.</p>
+                 </div>
+              )}
+
+              {/* SINGLE NODE VIEW */}
+              {activeNode && selectedNodeIds.length === 1 && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Icon name="Type" size={14} /> Label</label>
+                    <input type="text" value={activeNode.label} onChange={(e) => setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, label: e.target.value } : n))} onBlur={() => pushHistory(nodes, edges)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                     <div className="space-y-3">
+                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Icon name="Palette" size={14} /> Color</label>
+                       <div className="flex flex-wrap gap-1.5">
+                         {COLORS.map(color => (
+                           <button key={color} onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, color } : n)); pushHistory(nodes, edges); }} className={`w-6 h-6 rounded-full ${activeNode.color === color ? 'ring-2 ring-offset-2 ring-slate-400' : ''}`} style={{ backgroundColor: color }} />
+                         ))}
+                       </div>
+                     </div>
+                     <div className="space-y-3">
+                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">Shape</label>
+                       <div className="flex gap-2">
+                          <button onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, shape: 'circle' } : n)); }} className={`p-2 rounded border ${activeNode.shape === 'circle' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-400'}`}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></button>
+                          <button onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, shape: 'rect' } : n)); }} className={`p-2 rounded border ${activeNode.shape === 'rect' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-400'}`}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="4"/></svg></button>
+                          <button onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, shape: 'diamond' } : n)); }} className={`p-2 rounded border ${activeNode.shape === 'diamond' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-400'}`}><Icon name="Hexagon" size={16}/></button>
+                       </div>
+                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Icon name="FileText" size={14} /> Notes (Markdown)</label>
+                       <button onClick={() => setMarkdownMode(!markdownMode)} className="text-xs text-blue-600 hover:underline">{markdownMode ? 'Edit' : 'Preview'}</button>
+                    </div>
+                    {!markdownMode ? (
+                      <textarea value={activeNode.notes || ''} onChange={(e) => setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, notes: e.target.value } : n))} onBlur={() => pushHistory(nodes, edges)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm min-h-[160px] resize-y focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Add markdown notes..." />
+                    ) : (
+                      <div className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-sm min-h-[160px] prose prose-slate prose-sm" dangerouslySetInnerHTML={{ __html: marked.parse(activeNode.notes || '*No notes added yet.*') }} />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* SINGLE EDGE VIEW */}
+              {activeEdge && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Relationship Label</label>
+                    <input type="text" value={activeEdge.label || ''} onChange={(e) => setEdges(edges.map(edge => edge.id === activeEdge.id ? { ...edge, label: e.target.value } : edge))} onBlur={() => pushHistory(nodes, edges)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Icon name="Activity" size={14} /> Edge Weight</label>
+                    <div className="flex items-center gap-3">
+                      <input type="range" min="1" max="5" step="1" value={activeEdge.weight || 1} onChange={(e) => setEdges(edges.map(edge => edge.id === activeEdge.id ? { ...edge, weight: parseInt(e.target.value) } : edge))} onMouseUp={() => pushHistory(nodes, edges)} className="flex-1 accent-blue-500 cursor-pointer" />
+                      <span className="text-sm font-medium text-slate-600 w-6 text-center">{activeEdge.weight || 1}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Line Style</label>
+                     <div className="flex gap-2">
+                        {['solid', 'dashed', 'dotted'].map(style => (
+                           <button key={style} onClick={() => { setEdges(edges.map(e => e.id === activeEdge.id ? { ...e, style } : e)); pushHistory(nodes, edges); }} className={`flex-1 py-1.5 text-xs font-medium rounded border ${activeEdge.style === style ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>{style.charAt(0).toUpperCase() + style.slice(1)}</button>
+                        ))}
+                     </div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                    <div className="text-xs text-slate-500 flex justify-between"><span>Source:</span><span className="font-medium text-slate-700 truncate">{nodes.find(n => n.id === activeEdge.source)?.label}</span></div>
+                    <div className="text-xs text-slate-500 flex justify-between"><span>Target:</span><span className="font-medium text-slate-700 truncate">{nodes.find(n => n.id === activeEdge.target)?.label}</span></div>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-slate-100">
+                    <button onClick={() => { const newEdges = edges.map(edge => edge.id === activeEdge.id ? { ...edge, source: edge.target, target: edge.source } : edge); setEdges(newEdges); pushHistory(nodes, newEdges); }} className="w-full py-2.5 px-4 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                      Reverse Direction
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </aside>
+
         </div>
       );
     }

@@ -1,15 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Knowledge Graph Pro</title>
+  <title>Implementation Science - Knowledge Graph</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
 
   <style>
     body, html { margin: 0; padding: 0; overflow: hidden; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; background: #f8fafc; user-select: none; }
@@ -22,9 +21,7 @@
     
     /* Marquee selection box */
     .selection-box { position: absolute; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.1); pointer-events: none; z-index: 50; }
-  </style>
-</head>
-<body>
+  </style></head><body>
   <div id="root"></div>
 
   <script type="text/babel">
@@ -36,20 +33,14 @@
         Plus: <path d="M12 5v14M5 12h14"/>,
         MousePointer2: <><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></>,
         LinkIcon: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></>,
-        ZoomIn: <><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></>,
-        ZoomOut: <><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="8" x2="14" y1="11" y2="11"/></>,
-        Focus: <><circle cx="12" cy="12" r="3"/><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></>,
         Settings2: <><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="7" r="3"/><circle cx="8" cy="17" r="3"/></>,
         Trash2: <><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></>,
         Activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>,
         Type: <><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></>,
         Palette: <><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.836-.437-1.124-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></>,
         FileText: <><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></>,
-        Download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></>,
-        Upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></>,
         Undo: <><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></>,
         Redo: <><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></>,
-        Wand: <><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8l1.4 1.4"/><path d="M10.8 6.2l1.4 1.4"/><path d="M17.8 6.2l1.4-1.4"/><path d="M10.8 11.8l1.4-1.4"/><path d="m3 21 9-9"/><path d="M12.2 6.2a2 2 0 1 1 2.8 2.8"/></>,
         Grid: <><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="3" x2="21" y1="15" y2="15"/><line x1="9" x2="9" y1="3" y2="21"/><line x1="15" x2="15" y1="3" y2="21"/></>,
         Search: <><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></>,
         Image: <><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>,
@@ -57,70 +48,117 @@
         Hexagon: <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></>,
         EyeOff: <><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></>,
         Copy: <><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>,
-        Terminal: <><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></>
+        Terminal: <><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></>,
+        Wand: <><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8l1.4 1.4"/><path d="M10.8 6.2l1.4 1.4"/><path d="M17.8 6.2l1.4-1.4"/><path d="M10.8 11.8l1.4-1.4"/><path d="m3 21 9-9"/><path d="M12.2 6.2a2 2 0 1 1 2.8 2.8"/></>,
+        Download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></>,
+        Upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></>
       };
-      return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{icons[name]}</svg>;
+      return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>{icons[name]}</svg>;
     };
 
     // --- Constants & Defaults ---
     const COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444', '#64748b', '#ec4899'];
-    const COLOR_MAP = {
-      'blue': '#3b82f6', 'emerald': '#10b981', 'green': '#10b981',
-      'violet': '#8b5cf6', 'purple': '#8b5cf6', 'amber': '#f59e0b',
-      'orange': '#f59e0b', 'red': '#ef4444', 'slate': '#64748b',
-      'gray': '#64748b', 'pink': '#ec4899'
-    };
+    const COLOR_MAP = { 'blue': '#3b82f6', 'emerald': '#10b981', 'green': '#10b981', 'violet': '#8b5cf6', 'purple': '#8b5cf6', 'amber': '#f59e0b', 'orange': '#f59e0b', 'red': '#ef4444', 'slate': '#64748b', 'gray': '#64748b', 'pink': '#ec4899' };
     const BASE_NODE_RADIUS = 40;
     
+    // Core Implementation Science Knowledge Graph Data
     const INITIAL_NODES = [
-      { id: '1', label: 'Artificial Intelligence', x: 0, y: -150, color: '#3b82f6', shape: 'diamond', notes: '**AI** is the simulation of human intelligence processes by machines.' },
-      { id: '2', label: 'Machine Learning', x: -150, y: 50, color: '#10b981', shape: 'rect', notes: 'Algorithms that improve automatically.' },
-      { id: '3', label: 'Deep Learning', x: -300, y: 200, color: '#10b981', shape: 'circle', notes: 'Neural networks with multiple layers.' },
-      { id: '4', label: 'Knowledge Graphs', x: 150, y: 50, color: '#8b5cf6', shape: 'rect', notes: 'Structural representation of facts.' },
-      { id: '5', label: 'NLP', x: -50, y: 200, color: '#f59e0b', shape: 'circle', notes: 'Natural Language Processing.' },
-      { id: '6', label: 'Semantic Web', x: 300, y: 200, color: '#8b5cf6', shape: 'circle', notes: 'Extension of WWW by W3C.' }
+      { id: '1', label: 'Implementation Science', x: 0, y: 0, color: '#3b82f6', shape: 'diamond', notes: '**Implementation Science** is the scientific study of methods to promote the systematic uptake of research findings and other evidence-based practices into routine practice, and, hence, to improve the quality and effectiveness of health services.' },
+      
+      // Contexts
+      { id: '2', label: 'Implementation Contexts', x: -300, y: -150, color: '#8b5cf6', shape: 'rect', notes: 'The multifaceted environments and settings in which implementation occurs. Frameworks like CFIR and EPIS are commonly used to evaluate context.' },
+      { id: '2a', label: 'Inner Setting', x: -400, y: -250, color: '#8b5cf6', shape: 'circle', notes: 'Features of the implementing organization (e.g., structural characteristics, culture, networks and communications, readiness for implementation).' },
+      { id: '2b', label: 'Outer Setting', x: -200, y: -250, color: '#8b5cf6', shape: 'circle', notes: 'The economic, political, and social context within which an organization resides (e.g., funding policies, external mandates, cosmopolitism).' },
+      
+      // Innovations
+      { id: '3', label: 'Innovations (EBPs)', x: -250, y: 150, color: '#10b981', shape: 'rect', notes: 'Evidence-Based Practices, guidelines, tools, or care delivery models being implemented.' },
+      { id: '3a', label: 'Clinical Interventions', x: -350, y: 250, color: '#10b981', shape: 'circle', notes: 'Specific, evidence-based psychosocial or medical treatments targeting patient outcomes.' },
+      { id: '3b', label: 'Care Delivery Models', x: -150, y: 250, color: '#10b981', shape: 'circle', notes: 'Structural shifts in how care is provided, such as stepped care, task-sharing, or integrated primary care.' },
+      
+      // Strategies
+      { id: '4', label: 'Implementation Strategies', x: 300, y: -150, color: '#f59e0b', shape: 'rect', notes: 'Methods or techniques used to enhance the adoption, implementation, and sustainability of a clinical program or practice (e.g., ERIC compilation).' },
+      { id: '4a', label: 'Capacity Building', x: 200, y: -250, color: '#f59e0b', shape: 'circle', notes: 'Strategies focused on training, providing ongoing supervision, and educating implementation partners.' },
+      { id: '4b', label: 'System Change', x: 400, y: -250, color: '#f59e0b', shape: 'circle', notes: 'Strategies targeting workflow, financing, restructuring, or deploying new technologies.' },
+      
+      // Mechanisms
+      { id: '5', label: 'Mechanisms of Change', x: 0, y: -200, color: '#ec4899', shape: 'rect', notes: 'The processes or events through which implementation strategies operate to affect outcomes (e.g., altering provider self-efficacy, shifting organizational climate).' },
+      
+      // Outcomes
+      { id: '6', label: 'Outcomes', x: 250, y: 150, color: '#ef4444', shape: 'rect', notes: 'The measurable effects of implementation efforts. Proctor et al. conceptualize these into distinct tiers: Implementation, Service, and Client outcomes.' },
+      { id: '6a', label: 'Implementation Outcomes', x: 150, y: 250, color: '#ef4444', shape: 'circle', notes: 'Indicators of implementation success: **Acceptability, Adoption, Appropriateness, Feasibility, Fidelity, Cost, Penetration, and Sustainability**.' },
+      { id: '6b', label: 'Service & Client Outcomes', x: 350, y: 250, color: '#ef4444', shape: 'circle', notes: 'Indicators of system and patient-level success: **Efficiency, Safety, Effectiveness, Equity, Patient-centeredness, Timeliness**, and **Clinical Symptomatology**.' },
+      
+      // Key Actors
+      { id: '7', label: 'Implementation Partners', x: 0, y: 200, color: '#64748b', shape: 'diamond', notes: 'The critical individuals driving or impacted by implementation, including key informants, agency leadership, and frontline providers.' },
+      { id: '7a', label: 'Rights Holders', x: 0, y: 300, color: '#64748b', shape: 'circle', notes: 'Patients, community members, and populations whose health and well-being are directly impacted by the intervention and system changes.' }
     ];
 
     const INITIAL_EDGES = [
-      { id: 'e1', source: '1', target: '2', label: 'includes', weight: 2, style: 'solid' },
-      { id: 'e2', source: '2', target: '3', label: 'includes', weight: 3, style: 'solid' },
-      { id: 'e3', source: '1', target: '4', label: 'enhanced by', weight: 3, style: 'solid' },
-      { id: 'e4', source: '1', target: '5', label: 'includes', weight: 2, style: 'solid' },
-      { id: 'e5', source: '4', target: '6', label: 'foundation of', weight: 2, style: 'solid' },
-      { id: 'e6', source: '5', target: '4', label: 'extracts entities', weight: 1, style: 'dashed' },
-      { id: 'e7', source: '4', target: '4', label: 'updates self', weight: 1, style: 'dotted' },
-      { id: 'e8', source: '4', target: '1', label: 'informs', weight: 2, style: 'solid' } 
+      // Core Definitions
+      { id: 'e1', source: '1', target: '2', label: 'evaluates', weight: 3, style: 'solid' },
+      { id: 'e2', source: '1', target: '3', label: 'translates', weight: 3, style: 'solid' },
+      { id: 'e3', source: '1', target: '4', label: 'develops & tests', weight: 3, style: 'solid' },
+      
+      // Context Sub-components
+      { id: 'e4', source: '2', target: '2a', label: 'includes', weight: 2, style: 'solid' },
+      { id: 'e5', source: '2', target: '2b', label: 'includes', weight: 2, style: 'solid' },
+      
+      // Innovations Sub-components
+      { id: 'e6', source: '3', target: '3a', label: 'includes', weight: 2, style: 'solid' },
+      { id: 'e7', source: '3', target: '3b', label: 'includes', weight: 2, style: 'solid' },
+      
+      // Strategy Sub-components
+      { id: 'e8', source: '4', target: '4a', label: 'includes', weight: 2, style: 'solid' },
+      { id: 'e9', source: '4', target: '4b', label: 'includes', weight: 2, style: 'solid' },
+      
+      // Outcomes Sub-components
+      { id: 'e10', source: '6', target: '6a', label: 'evaluates via', weight: 2, style: 'solid' },
+      { id: 'e11', source: '6', target: '6b', label: 'evaluates via', weight: 2, style: 'solid' },
+      { id: 'e12', source: '6a', target: '6b', label: 'precondition for', weight: 3, style: 'dashed' },
+      
+      // Actors Sub-components
+      { id: 'e13', source: '7', target: '7a', label: 'centers', weight: 2, style: 'solid' },
+
+      // Causal Pathways (The Logic of Implementation)
+      { id: 'e14', source: '2', target: '4', label: 'informs selection of', weight: 2, style: 'dashed' },
+      { id: 'e15', source: '4', target: '5', label: 'activates', weight: 3, style: 'solid' },
+      { id: 'e16', source: '5', target: '6a', label: 'produces', weight: 3, style: 'solid' },
+      { id: 'e17', source: '2', target: '5', label: 'moderates', weight: 1, style: 'dotted' },
+      { id: 'e18', source: '3', target: '6b', label: 'designed to improve', weight: 2, style: 'dashed' },
+      { id: 'e19', source: '7', target: '4', label: 'enacts', weight: 2, style: 'solid' },
+      { id: 'e20', source: '7', target: '3', label: 'adopts / adapts', weight: 2, style: 'solid' }
     ];
 
     function KnowledgeGraphApp() {
       // --- Initialization ---
       const loadState = (k, f) => { try { const i = localStorage.getItem(k); return i ? JSON.parse(i) : f; } catch (e) { return f; } };
-      const [nodes, setNodes] = useState(() => loadState('kg_nodes_v2', INITIAL_NODES));
-      const [edges, setEdges] = useState(() => loadState('kg_edges_v2', INITIAL_EDGES));
+      const [nodes, setNodes] = useState(() => loadState('kg_nodes_is', INITIAL_NODES));
+      const [edges, setEdges] = useState(() => loadState('kg_edges_is', INITIAL_EDGES));
+      const [a11yMessage, setA11yMessage] = useState("");
       
-      const [history, setHistory] = useState([{ nodes: loadState('kg_nodes_v2', INITIAL_NODES), edges: loadState('kg_edges_v2', INITIAL_EDGES) }]);
+      const [history, setHistory] = useState([{ nodes: loadState('kg_nodes_is', INITIAL_NODES), edges: loadState('kg_edges_is', INITIAL_EDGES) }]);
       const [historyIndex, setHistoryIndex] = useState(0);
+
+      const fileInputRef = useRef(null);
+
+      const announce = (message) => { setA11yMessage(message); setTimeout(() => setA11yMessage(""), 3000); };
 
       const pushHistory = (newNodes, newEdges) => {
         const nextHistory = history.slice(0, historyIndex + 1);
         nextHistory.push({ nodes: JSON.parse(JSON.stringify(newNodes)), edges: JSON.parse(JSON.stringify(newEdges)) });
-        setHistory(nextHistory);
-        setHistoryIndex(nextHistory.length - 1);
-        localStorage.setItem('kg_nodes_v2', JSON.stringify(newNodes));
-        localStorage.setItem('kg_edges_v2', JSON.stringify(newEdges));
+        setHistory(nextHistory); setHistoryIndex(nextHistory.length - 1);
+        localStorage.setItem('kg_nodes_is', JSON.stringify(newNodes)); localStorage.setItem('kg_edges_is', JSON.stringify(newEdges));
       };
 
-      const undo = () => { if (historyIndex > 0) { setHistoryIndex(i => i - 1); setNodes(history[historyIndex - 1].nodes); setEdges(history[historyIndex - 1].edges); } };
-      const redo = () => { if (historyIndex < history.length - 1) { setHistoryIndex(i => i + 1); setNodes(history[historyIndex + 1].nodes); setEdges(history[historyIndex + 1].edges); } };
+      const undo = () => { if (historyIndex > 0) { setHistoryIndex(i => i - 1); setNodes(history[historyIndex - 1].nodes); setEdges(history[historyIndex - 1].edges); announce("Action undone"); } };
+      const redo = () => { if (historyIndex < history.length - 1) { setHistoryIndex(i => i + 1); setNodes(history[historyIndex + 1].nodes); setEdges(history[historyIndex + 1].edges); announce("Action redone"); } };
 
       useEffect(() => {
         const handleKeyDown = (e) => {
           if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
           if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); }
           if (e.key === 'Backspace' || e.key === 'Delete') {
-             if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
-                deleteSelected();
-             }
+             if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') deleteSelected();
           }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -131,12 +169,13 @@
       const [transform, setTransform] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2, scale: 1 });
       const [mode, setMode] = useState('select');
       const [connectingFrom, setConnectingFrom] = useState(null);
+      const [hoveredNodeId, setHoveredNodeId] = useState(null); 
       
       const [selectedNodeIds, setSelectedNodeIds] = useState([]);
       const [selectedEdgeId, setSelectedEdgeId] = useState(null);
       const [searchQuery, setSearchQuery] = useState("");
       const [snapToGrid, setSnapToGrid] = useState(false);
-      const [markdownMode, setMarkdownMode] = useState(true);
+      const [isEditingNotes, setIsEditingNotes] = useState(false); 
       
       const [marquee, setMarquee] = useState(null);
       const [contextMenu, setContextMenu] = useState(null);
@@ -149,32 +188,43 @@
       const [isPanning, setIsPanning] = useState(false);
       const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
+      // --- Helpers ---
+      const getNodeRadius = (nodeId) => BASE_NODE_RADIUS + (edges.filter(e => e.source === nodeId || e.target === nodeId).length * 4);
+
+      // --- Collision / Overlap Resolution ---
+      const resolveCollisions = (currentNodes, fixedNodeIds = []) => {
+        const simNodes = currentNodes.map(n => ({
+          ...n,
+          fx: fixedNodeIds.includes(n.id) ? n.x : null,
+          fy: fixedNodeIds.includes(n.id) ? n.y : null
+        }));
+
+        d3.forceSimulation(simNodes)
+          .alpha(1)
+          .force("collide", d3.forceCollide().radius(n => getNodeRadius(n.id) + 15).iterations(3))
+          .stop()
+          .tick(50); 
+
+        return currentNodes.map((n, i) => ({ ...n, x: simNodes[i].x || 0, y: simNodes[i].y || 0 }));
+      };
+
       // --- Query Engine ---
       const filteredNodesMap = useMemo(() => {
-        if (!searchQuery.trim()) return new Set(nodes.map(n => n.id)); // All visible
-        
+        if (!searchQuery.trim()) return new Set(nodes.map(n => n.id)); 
         try {
             const tokens = searchQuery.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
             let resultNodes = [...nodes];
-
             for (let token of tokens) {
-                token = token.replace(/(^"|"$)/g, ''); // strip quotes
+                token = token.replace(/(^"|"$)/g, ''); 
                 const colonIdx = token.indexOf(':');
-
                 if (colonIdx > 0) {
                     const key = token.substring(0, colonIdx).toLowerCase();
                     const value = token.substring(colonIdx + 1).toLowerCase();
-
-                    if (key === 'label') {
-                        resultNodes = resultNodes.filter(n => n.label.toLowerCase().includes(value));
-                    } else if (key === 'notes') {
-                        resultNodes = resultNodes.filter(n => (n.notes||'').toLowerCase().includes(value));
-                    } else if (key === 'shape') {
-                        resultNodes = resultNodes.filter(n => n.shape === value);
-                    } else if (key === 'color') {
-                        const hexValue = COLOR_MAP[value] || value;
-                        resultNodes = resultNodes.filter(n => n.color === hexValue);
-                    } else if (key === 'edge') {
+                    if (key === 'label') resultNodes = resultNodes.filter(n => n.label.toLowerCase().includes(value));
+                    else if (key === 'notes') resultNodes = resultNodes.filter(n => (n.notes||'').toLowerCase().includes(value));
+                    else if (key === 'shape') resultNodes = resultNodes.filter(n => n.shape === value);
+                    else if (key === 'color') { const hexValue = COLOR_MAP[value] || value; resultNodes = resultNodes.filter(n => n.color === hexValue); }
+                    else if (key === 'edge') {
                         const matchingEdges = edges.filter(e => (e.label||'').toLowerCase().includes(value));
                         const connectedNodeIds = new Set(matchingEdges.flatMap(e => [e.source, e.target]));
                         resultNodes = resultNodes.filter(n => connectedNodeIds.has(n.id));
@@ -186,95 +236,167 @@
                     }
                 } else {
                     const lowerToken = token.toLowerCase();
-                    resultNodes = resultNodes.filter(n =>
-                        n.label.toLowerCase().includes(lowerToken) ||
-                        (n.notes||'').toLowerCase().includes(lowerToken)
-                    );
+                    resultNodes = resultNodes.filter(n => n.label.toLowerCase().includes(lowerToken) || (n.notes||'').toLowerCase().includes(lowerToken));
                 }
             }
             return new Set(resultNodes.map(n => n.id));
-        } catch(e) {
-            return new Set(nodes.map(n => n.id)); // Fallback if parse fails
-        }
+        } catch(e) { return new Set(nodes.map(n => n.id)); }
       }, [searchQuery, nodes, edges]);
 
       const isQueryActive = searchQuery.trim() !== "";
 
-      // --- Helpers ---
-      const getNodeRadius = (nodeId) => {
-        const degree = edges.filter(e => e.source === nodeId || e.target === nodeId).length;
-        return BASE_NODE_RADIUS + (degree * 4);
-      };
-
       const visibleNodesMap = useMemo(() => {
         const map = new Set(nodes.map(n => n.id));
-        const collapsedNodes = nodes.filter(n => n.collapsed).map(n => n.id);
-        collapsedNodes.forEach(parentId => {
-           edges.filter(e => e.source === parentId).forEach(e => {
-              if (e.target !== parentId) map.delete(e.target);
-           });
-        });
+        nodes.filter(n => n.collapsed).forEach(n => edges.filter(e => e.source === n.id).forEach(e => { if (e.target !== n.id) map.delete(e.target); }));
         return map;
       }, [nodes, edges]);
 
       const visibleNodes = nodes.filter(n => visibleNodesMap.has(n.id));
       const visibleEdges = edges.filter(e => visibleNodesMap.has(e.source) && visibleNodesMap.has(e.target));
 
-      const screenToSvg = (clientX, clientY) => {
-         return {
-            x: (clientX - transform.x) / transform.scale,
-            y: (clientY - transform.y) / transform.scale
-         };
-      };
+      const screenToSvg = (clientX, clientY) => ({ x: (clientX - transform.x) / transform.scale, y: (clientY - transform.y) / transform.scale });
+
+      // --- Advanced Layout Rendering Data ---
+      const edgeRenderData = useMemo(() => {
+        return visibleEdges.map(edge => {
+          const src = nodes.find(n => n.id === edge.source);
+          const tgt = nodes.find(n => n.id === edge.target);
+          if (!src || !tgt) return null;
+
+          const isDimmed = isQueryActive && (!filteredNodesMap.has(src.id) || !filteredNodesMap.has(tgt.id));
+          const isSelected = selectedEdgeId === edge.id;
+          const strokeW = isSelected ? Math.max(3, (edge.weight || 1) * 1.5 + 1) : (edge.weight || 1) * 1.5;
+          const arrSz = 8 + strokeW * 1.5;
+          const edgeColor = isSelected ? '#3b82f6' : '#cbd5e1';
+          const dashArray = edge.style === 'dashed' ? '8 6' : edge.style === 'dotted' ? '2 6' : 'none';
+
+          const edgesBetween = edges.filter(e => 
+              (e.source === src.id && e.target === tgt.id) || 
+              (e.source === tgt.id && e.target === src.id)
+          ).sort((a, b) => a.id.localeCompare(b.id));
+
+          const totalEdges = edgesBetween.length;
+          const edgeIndex = edgesBetween.findIndex(e => e.id === edge.id);
+
+          let pathData = '';
+          let textPathData = '';
+          let arrAngle = 0;
+          let endX = 0, endY = 0;
+
+          if (src.id === tgt.id) {
+              const r = getNodeRadius(src.id) + edgeIndex * 25;
+              const tipX = src.x + r/3;
+              const tipY = src.y - r;
+              
+              const dx = tipX - (src.x + r*2.5);
+              const dy = tipY - (src.y - r*3.5);
+              const len = Math.sqrt(dx*dx + dy*dy);
+              
+              const lineEndX = tipX - (dx/len) * (arrSz * 0.8);
+              const lineEndY = tipY - (dy/len) * (arrSz * 0.8);
+
+              pathData = `M ${src.x - r/3} ${src.y - r} C ${src.x - r*2.5} ${src.y - r*3.5}, ${src.x + r*2.5} ${src.y - r*3.5}, ${lineEndX} ${lineEndY}`;
+              textPathData = `M ${src.x - r/3} ${src.y - r} C ${src.x - r*2.5} ${src.y - r*3.5}, ${src.x + r*2.5} ${src.y - r*3.5}, ${tipX} ${tipY}`; 
+              endX = tipX;
+              endY = tipY;
+              arrAngle = Math.atan2(dy, dx);
+          } else {
+              const dist = Math.sqrt(Math.pow(tgt.x - src.x, 2) + Math.pow(tgt.y - src.y, 2));
+              if (dist > 0) {
+                  const sRad = getNodeRadius(src.id) + 3; 
+                  const tRadTip = getNodeRadius(tgt.id) + 3;
+                  const tRadLine = tRadTip + arrSz * 0.7; 
+                  
+                  let curveOffset = 0;
+                  if (totalEdges > 1) {
+                      const isCanonical = src.id < tgt.id;
+                      const baseIndex = edgeIndex - (totalEdges - 1) / 2;
+                      curveOffset = baseIndex * 50 * (isCanonical ? 1 : -1);
+                  }
+
+                  const cpX = (src.x + tgt.x)/2 + (- (tgt.y - src.y) / dist) * curveOffset;
+                  const cpY = (src.y + tgt.y)/2 + ((tgt.x - src.x) / dist) * curveOffset;
+
+                  const startX = src.x + sRad * Math.cos(Math.atan2(cpY - src.y, cpX - src.x));
+                  const startY = src.y + sRad * Math.sin(Math.atan2(cpY - src.y, cpX - src.x));
+                  
+                  endX = tgt.x + tRadTip * Math.cos(Math.atan2(cpY - tgt.y, cpX - tgt.x));
+                  endY = tgt.y + tRadTip * Math.sin(Math.atan2(cpY - tgt.y, cpX - tgt.x));
+
+                  const lineEndX = tgt.x + tRadLine * Math.cos(Math.atan2(cpY - tgt.y, cpX - tgt.x));
+                  const lineEndY = tgt.y + tRadLine * Math.sin(Math.atan2(cpY - tgt.y, cpX - tgt.x));
+
+                  pathData = `M ${startX} ${startY} Q ${cpX} ${cpY} ${lineEndX} ${lineEndY}`;
+                  textPathData = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`;
+
+                  if (startX > endX) {
+                      textPathData = `M ${endX} ${endY} Q ${cpX} ${cpY} ${startX} ${startY}`;
+                  }
+                  arrAngle = Math.atan2(cpY - tgt.y, cpX - tgt.x) + Math.PI;
+              }
+          }
+
+          return { ...edge, pathData, textPathData, isDimmed, strokeW, edgeColor, dashArray, arrAngle, endX, endY, arrSz, srcLabel: src.label, tgtLabel: tgt.label };
+        }).filter(Boolean);
+      }, [visibleEdges, nodes, edges, isQueryActive, filteredNodesMap, selectedEdgeId]);
+
+      // --- Minimap Bounds ---
+      const graphBounds = useMemo(() => {
+         if (nodes.length === 0) return { x: -500, y: -500, w: 1000, h: 1000 };
+         const xs = nodes.map(n => n.x); const ys = nodes.map(n => n.y);
+         const minX = Math.min(...xs) - 200; const maxX = Math.max(...xs) + 200;
+         const minY = Math.min(...ys) - 200; const maxY = Math.max(...ys) + 200;
+         return { x: minX, y: minY, w: Math.max(maxX - minX, 1000), h: Math.max(maxY - minY, 1000) };
+      }, [nodes]);
 
       // --- Event Handlers ---
       const handleWheel = useCallback((e) => {
         const scaleAdj = e.deltaY > 0 ? 0.9 : 1.1;
         const newScale = Math.max(0.05, Math.min(transform.scale * scaleAdj, 4));
-        setTransform(prev => ({
-          x: e.clientX - (e.clientX - prev.x) * (newScale / prev.scale),
-          y: e.clientY - (e.clientY - prev.y) * (newScale / prev.scale),
-          scale: newScale
-        }));
+        setTransform(prev => ({ x: e.clientX - (e.clientX - prev.x) * (newScale / prev.scale), y: e.clientY - (e.clientY - prev.y) * (newScale / prev.scale), scale: newScale }));
       }, [transform]);
 
       const handlePointerDown = (e) => {
         if (contextMenu) setContextMenu(null);
-
         if (e.target.tagName === 'svg' || e.target.id === 'bg-grid') {
           if (e.shiftKey) {
              const pos = screenToSvg(e.clientX, e.clientY);
              setMarquee({ startX: pos.x, startY: pos.y, endX: pos.x, endY: pos.y });
           } else {
              lastMousePos.current = { x: e.clientX, y: e.clientY };
-             setIsPanning(true);
-             setSelectedNodeIds([]);
-             setSelectedEdgeId(null);
+             setIsPanning(true); setSelectedNodeIds([]); setSelectedEdgeId(null);
              if (mode === 'connect') { setMode('select'); setConnectingFrom(null); }
           }
         }
       };
 
+      const handleSvgDoubleClick = (e) => {
+         if (e.target.tagName === 'svg' || e.target.id === 'bg-grid') {
+            const pos = screenToSvg(e.clientX, e.clientY);
+            const rx = pos.x + (Math.random() * 2 - 1);
+            const ry = pos.y + (Math.random() * 2 - 1);
+            const newNode = { id: `n_${Date.now()}`, label: 'New Concept', x: rx, y: ry, color: COLORS[0], shape: 'circle', notes: '' };
+            
+            let newNodes = [...nodes, newNode];
+            newNodes = resolveCollisions(newNodes, [newNode.id]); 
+            
+            setNodes(newNodes); pushHistory(newNodes, edges);
+            setSelectedNodeIds([newNode.id]);
+            announce("New node added via double-click.");
+         }
+      };
+
       const handlePointerMove = (e) => {
-        const clientX = e.clientX; const clientY = e.clientY;
-
-        if (marquee) {
-           const pos = screenToSvg(clientX, clientY);
-           setMarquee(prev => ({ ...prev, endX: pos.x, endY: pos.y }));
-           return;
-        }
-
-        if (!isPanning && !isDraggingNode && !(mode === 'connect' && connectingFrom)) return;
+        const { clientX, clientY } = e;
+        if (marquee) { setMarquee(prev => ({ ...prev, endX: screenToSvg(clientX, clientY).x, endY: screenToSvg(clientX, clientY).y })); return; }
+        if (!isPanning && !isDraggingNode && !(mode === 'connect' && connectingFrom) && !connectingFrom) return;
+        
         if (requestRef.current) cancelAnimationFrame(requestRef.current);
-
         requestRef.current = requestAnimationFrame(() => {
-          const dx = clientX - lastMousePos.current.x;
-          const dy = clientY - lastMousePos.current.y;
+          const dx = clientX - lastMousePos.current.x; const dy = clientY - lastMousePos.current.y;
           lastMousePos.current = { x: clientX, y: clientY };
 
-          if (mode === 'connect' && connectingFrom) {
-            setMousePos(screenToSvg(clientX, clientY));
-          }
+          if (connectingFrom) setMousePos(screenToSvg(clientX, clientY));
 
           if (isPanning) {
             setTransform(prev => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
@@ -282,8 +404,7 @@
             dragHasMoved.current = true;
             setNodes(prev => prev.map(n => {
               if (!selectedNodeIds.includes(n.id)) return n;
-              let newX = n.x + (dx / transform.scale);
-              let newY = n.y + (dy / transform.scale);
+              let newX = n.x + (dx / transform.scale); let newY = n.y + (dy / transform.scale);
               if (snapToGrid) { newX = Math.round(newX/40)*40; newY = Math.round(newY/40)*40; }
               return { ...n, x: newX, y: newY };
             }));
@@ -293,20 +414,27 @@
 
       const handlePointerUp = () => {
         if (marquee) {
-           const xMin = Math.min(marquee.startX, marquee.endX);
-           const xMax = Math.max(marquee.startX, marquee.endX);
-           const yMin = Math.min(marquee.startY, marquee.endY);
-           const yMax = Math.max(marquee.startY, marquee.endY);
-           
+           const xMin = Math.min(marquee.startX, marquee.endX); const xMax = Math.max(marquee.startX, marquee.endX);
+           const yMin = Math.min(marquee.startY, marquee.endY); const yMax = Math.max(marquee.startY, marquee.endY);
            const selected = visibleNodes.filter(n => n.x >= xMin && n.x <= xMax && n.y >= yMin && n.y <= yMax).map(n => n.id);
-           setSelectedNodeIds(selected);
-           setMarquee(null);
+           setSelectedNodeIds(selected); announce(`${selected.length} items selected.`); setMarquee(null);
         } else if (isDraggingNode && dragHasMoved.current) {
-          pushHistory(nodes, edges);
+           const finalNodes = resolveCollisions(nodes, selectedNodeIds);
+           setNodes(finalNodes);
+           pushHistory(finalNodes, edges);
         }
-        setIsPanning(false);
-        setIsDraggingNode(false);
-        dragHasMoved.current = false;
+
+        if (connectingFrom) {
+            if (hoveredNodeId && hoveredNodeId !== connectingFrom) {
+               const newEdge = { id: `e_${Date.now()}`, source: connectingFrom, target: hoveredNodeId, label: 'relates to', weight: 1, style: 'solid' };
+               const newEdges = [...edges, newEdge];
+               setEdges(newEdges); pushHistory(nodes, newEdges);
+               announce("Nodes successfully connected.");
+            }
+            if (mode !== 'connect' || !window.event?.shiftKey) setConnectingFrom(null); 
+        }
+
+        setIsPanning(false); setIsDraggingNode(false); dragHasMoved.current = false;
       };
 
       const handleNodePointerDown = (e, nodeId) => {
@@ -314,20 +442,20 @@
         if (e.button === 2) return; 
         if (contextMenu) setContextMenu(null);
 
+        if (e.altKey) {
+            setConnectingFrom(nodeId);
+            setMousePos(screenToSvg(e.clientX, e.clientY));
+            announce(`Quick connect started from ${nodes.find(n => n.id === nodeId)?.label}`);
+            return;
+        }
+
         lastMousePos.current = { x: e.clientX, y: e.clientY };
         dragHasMoved.current = false;
         
         if (mode === 'connect') {
           if (!connectingFrom) {
-            setConnectingFrom(nodeId);
-            setMousePos(screenToSvg(e.clientX, e.clientY));
-          } else {
-            const newEdge = { id: `e_${Date.now()}`, source: connectingFrom, target: nodeId, label: 'relates to', weight: 1, style: 'solid' };
-            const newEdges = [...edges, newEdge];
-            setEdges(newEdges);
-            pushHistory(nodes, newEdges);
-            if (e.shiftKey) setConnectingFrom(nodeId); 
-            else setConnectingFrom(null);
+            setConnectingFrom(nodeId); setMousePos(screenToSvg(e.clientX, e.clientY));
+            announce(`Connecting from ${nodes.find(n => n.id === nodeId)?.label}`);
           }
         } else {
           if (e.shiftKey) {
@@ -336,41 +464,31 @@
           } else {
              if (!selectedNodeIds.includes(nodeId)) setSelectedNodeIds([nodeId]);
           }
-          
-          setSelectedEdgeId(null);
-          setIsDraggingNode(true);
-          
-          setNodes(prev => {
-            const selected = prev.filter(n => selectedNodeIds.includes(n.id) || n.id === nodeId);
-            const others = prev.filter(n => !selectedNodeIds.includes(n.id) && n.id !== nodeId);
-            return [...others, ...selected];
-          });
+          setSelectedEdgeId(null); setIsDraggingNode(true);
+          setNodes(prev => [...prev.filter(n => !selectedNodeIds.includes(n.id) && n.id !== nodeId), ...prev.filter(n => selectedNodeIds.includes(n.id) || n.id === nodeId)]);
         }
       };
 
       const handleNodeDoubleClick = (e, nodeId) => {
          e.stopPropagation();
          const newNodes = nodes.map(n => n.id === nodeId ? { ...n, collapsed: !n.collapsed } : n);
-         setNodes(newNodes);
-         pushHistory(newNodes, edges);
+         setNodes(newNodes); pushHistory(newNodes, edges);
+         announce(`Node ${newNodes.find(n => n.id === nodeId)?.collapsed ? 'collapsed' : 'expanded'}`);
       };
 
-      const handleContextMenu = (e, nodeId) => {
-         e.preventDefault();
-         e.stopPropagation();
-         setSelectedNodeIds([nodeId]);
-         setContextMenu({ x: e.clientX, y: e.clientY, nodeId });
-      };
+      const handleContextMenu = (e, nodeId) => { e.preventDefault(); e.stopPropagation(); setSelectedNodeIds([nodeId]); setContextMenu({ x: e.clientX, y: e.clientY, nodeId }); };
 
-      // --- Actions ---
+      // --- Actions & Layout ---
       const addNode = (xOffset = 0, yOffset = 0) => {
         const x = (window.innerWidth / 2 - transform.x) / transform.scale + xOffset;
         const y = (window.innerHeight / 2 - transform.y) / transform.scale + yOffset;
         const newNode = { id: `n_${Date.now()}`, label: 'New Concept', x: snapToGrid ? Math.round(x/40)*40 : x, y: snapToGrid ? Math.round(y/40)*40 : y, color: COLORS[0], shape: 'circle', notes: '' };
-        const newNodes = [...nodes, newNode];
-        setNodes(newNodes); pushHistory(newNodes, edges);
-        setSelectedNodeIds([newNode.id]); setMode('select');
-        return newNode;
+        
+        let newNodes = [...nodes, newNode];
+        newNodes = resolveCollisions(newNodes, [newNode.id]); 
+        
+        setNodes(newNodes); pushHistory(newNodes, edges); setSelectedNodeIds([newNode.id]); setMode('select');
+        announce("New concept node added."); return newNode;
       };
 
       const deleteSelected = () => {
@@ -378,292 +496,222 @@
           const newNodes = nodes.filter(n => !selectedNodeIds.includes(n.id));
           const newEdges = edges.filter(e => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target));
           setNodes(newNodes); setEdges(newEdges); pushHistory(newNodes, newEdges);
-          setSelectedNodeIds([]); setContextMenu(null);
+          setSelectedNodeIds([]); setContextMenu(null); announce(`${selectedNodeIds.length} nodes deleted.`);
         } else if (selectedEdgeId) {
           const newEdges = edges.filter(e => e.id !== selectedEdgeId);
-          setEdges(newEdges); pushHistory(nodes, newEdges);
-          setSelectedEdgeId(null);
+          setEdges(newEdges); pushHistory(nodes, newEdges); setSelectedEdgeId(null); announce("Edge deleted.");
         }
       };
 
       const duplicateNode = (nodeId) => {
-         const sourceNode = nodes.find(n => n.id === nodeId);
-         if (!sourceNode) return;
-         const newNode = { ...sourceNode, id: `n_${Date.now()}`, x: sourceNode.x + 50, y: sourceNode.y + 50 };
-         const newNodes = [...nodes, newNode];
+         const src = nodes.find(n => n.id === nodeId); if (!src) return;
+         const newNode = { ...src, id: `n_${Date.now()}`, x: src.x + 50, y: src.y + 50 };
+         
+         let newNodes = [...nodes, newNode];
+         newNodes = resolveCollisions(newNodes, [newNode.id]);
+         
+         setNodes(newNodes); pushHistory(newNodes, edges); setSelectedNodeIds([newNode.id]); setContextMenu(null); announce("Node duplicated.");
+      };
+
+      const tidyGraph = () => {
+         const simNodes = nodes.map(n => ({ ...n }));
+         const simEdges = edges.map(e => ({ source: e.source, target: e.target }));
+         
+         d3.forceSimulation(simNodes)
+            .force("link", d3.forceLink(simEdges).id(d => d.id).distance(150))
+            .force("charge", d3.forceManyBody().strength(-1000))
+            .force("center", d3.forceCenter(0, 0))
+            .force("collide", d3.forceCollide().radius(d => getNodeRadius(d.id) + 40)) 
+            .stop()
+            .tick(300); 
+            
+         const newNodes = nodes.map((n, i) => ({ ...n, x: simNodes[i].x, y: simNodes[i].y }));
          setNodes(newNodes); pushHistory(newNodes, edges);
-         setSelectedNodeIds([newNode.id]); setContextMenu(null);
+         setTransform({ x: window.innerWidth / 2, y: window.innerHeight / 2, scale: 0.8 });
+         announce("Graph auto-layout applied.");
+      };
+
+      const exportJSON = () => {
+         const blob = new Blob([JSON.stringify({ nodes, edges }, null, 2)], { type: "application/json" });
+         const url = URL.createObjectURL(blob);
+         const a = document.createElement("a"); a.href = url; a.download = `graph-${Date.now()}.json`; a.click();
+         URL.revokeObjectURL(url); announce("Graph exported as JSON.");
+      };
+
+      const handleImportJSON = (e) => {
+         const file = e.target.files[0];
+         if (!file) return;
+         const reader = new FileReader();
+         reader.onload = (evt) => {
+            try {
+               const parsed = JSON.parse(evt.target.result);
+               if (parsed.nodes && parsed.edges) {
+                  const resolvedNodes = resolveCollisions(parsed.nodes);
+                  setNodes(resolvedNodes); setEdges(parsed.edges);
+                  pushHistory(resolvedNodes, parsed.edges); announce("Graph imported successfully.");
+               }
+            } catch (err) { announce("Invalid JSON file."); }
+         };
+         reader.readAsText(file);
       };
 
       const exportPNG = () => {
          const svgString = new XMLSerializer().serializeToString(svgRef.current);
          const canvas = document.createElement("canvas");
          const cleanSvgString = svgString.replace(/<rect id="bg-grid"[\s\S]*?\/>/, '');
-         
-         const img = new Image();
-         const svg = new Blob([cleanSvgString], {type: "image/svg+xml;charset=utf-8"});
+         const img = new Image(); const svg = new Blob([cleanSvgString], {type: "image/svg+xml;charset=utf-8"});
          const url = URL.createObjectURL(svg);
          img.onload = function() {
-            canvas.width = window.innerWidth * 2;
-            canvas.height = window.innerHeight * 2;
-            const ctx = canvas.getContext("2d");
-            ctx.fillStyle = "#f8fafc"; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.scale(2, 2);
-            ctx.drawImage(img, 0, 0);
-            const png = canvas.toDataURL("image/png");
-            const a = document.createElement("a");
-            a.download = `knowledge-graph-${Date.now()}.png`;
-            a.href = png;
-            a.click();
-            URL.revokeObjectURL(url);
-         };
-         img.src = url;
+            canvas.width = window.innerWidth * 2; canvas.height = window.innerHeight * 2;
+            const ctx = canvas.getContext("2d"); ctx.fillStyle = "#f8fafc"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.scale(2, 2); ctx.drawImage(img, 0, 0);
+            const a = document.createElement("a"); a.download = `graph-${Date.now()}.png`; a.href = canvas.toDataURL("image/png"); a.click();
+            URL.revokeObjectURL(url); announce("Graph exported as PNG.");
+         }; img.src = url;
       };
 
-      // --- Render Math Helpers ---
-      const renderPath = (edge, isSelected) => {
-         const sourceNode = nodes.find(n => n.id === edge.source);
-         const targetNode = nodes.find(n => n.id === edge.target);
-         if (!sourceNode || !targetNode) return null;
-
-         // Dimming logic for queries
-         const isDimmedEdge = isQueryActive && (!filteredNodesMap.has(sourceNode.id) || !filteredNodesMap.has(targetNode.id));
-
-         const strokeW = isSelected ? Math.max(3, (edge.weight || 1) * 1.5 + 1) : (edge.weight || 1) * 1.5;
-         const edgeColor = isSelected ? '#3b82f6' : '#cbd5e1';
-         const dashArray = edge.style === 'dashed' ? '8 6' : edge.style === 'dotted' ? '2 6' : 'none';
-         const strokeLinecap = edge.style === 'dotted' ? 'round' : 'butt';
-
-         // Self-referential loop
-         if (sourceNode.id === targetNode.id) {
-            const r = getNodeRadius(sourceNode.id);
-            const startX = sourceNode.x - r/3;
-            const startY = sourceNode.y - r;
-            const endX = sourceNode.x + r/3;
-            const endY = sourceNode.y - r;
-            const pathData = `M ${startX} ${startY} C ${sourceNode.x - r*2.5} ${sourceNode.y - r*3.5}, ${sourceNode.x + r*2.5} ${sourceNode.y - r*3.5}, ${endX} ${endY}`;
-            
-            const arrowSize = 8 + strokeW;
-            const arrowP1 = `${endX},${endY}`;
-            const arrowP2 = `${endX + arrowSize * 0.8},${endY - arrowSize * 0.5}`;
-            const arrowP3 = `${endX + arrowSize * 0.2},${endY - arrowSize * 1.2}`;
-
-            return (
-               <g key={edge.id} onClick={(e) => { e.stopPropagation(); if (mode==='select') { setSelectedEdgeId(edge.id); setSelectedNodeIds([]); } }} className={`cursor-pointer group transition-opacity duration-300 ${isDimmedEdge ? 'opacity-10' : 'opacity-100'}`}>
-                  <path d={pathData} fill="none" stroke="transparent" strokeWidth="20" />
-                  <path d={pathData} fill="none" stroke={edgeColor} strokeWidth={strokeW} strokeDasharray={dashArray} strokeLinecap={strokeLinecap} className="transition-colors duration-200" />
-                  <polygon points={`${arrowP1} ${arrowP2} ${arrowP3}`} fill={edgeColor} className="transition-colors duration-200" />
-                  {edge.label && (
-                     <g transform={`translate(${sourceNode.x}, ${sourceNode.y - r*2.5})`}>
-                        <text textAnchor="middle" dominantBaseline="central" fontSize="11" stroke="#f8fafc" strokeWidth="4" className="font-bold opacity-90">{edge.label}</text>
-                        <text textAnchor="middle" dominantBaseline="central" fontSize="11" fill={isSelected ? '#1d4ed8' : '#64748b'} className="font-bold">{edge.label}</text>
-                     </g>
-                  )}
-               </g>
-            );
-         }
-
-         // Standard / Bidirectional Edge
-         const dx = targetNode.x - sourceNode.x;
-         const dy = targetNode.y - sourceNode.y;
-         const distance = Math.sqrt(dx * dx + dy * dy);
-         if (distance === 0) return null;
-
-         const sRadius = getNodeRadius(sourceNode.id) + 3;
-         const tRadius = getNodeRadius(targetNode.id) + 3; 
-         
-         const nx = -dy / distance;
-         const ny = dx / distance;
-         
-         // Bidirectional Check
-         const isBidi = edges.some(e => e.source === targetNode.id && e.target === sourceNode.id);
-         let curveOffset = distance * 0.15; 
-         if (isBidi) {
-            curveOffset = 40; 
-            if (sourceNode.id > targetNode.id) curveOffset = -40; 
-         }
-
-         const midX = (sourceNode.x + targetNode.x) / 2;
-         const midY = (sourceNode.y + targetNode.y) / 2;
-         const cpX = midX + nx * curveOffset;
-         const cpY = midY + ny * curveOffset;
-
-         const srcAngle = Math.atan2(cpY - sourceNode.y, cpX - sourceNode.x);
-         const tgtAngle = Math.atan2(cpY - targetNode.y, cpX - targetNode.x);
-
-         let startX = sourceNode.x + sRadius * Math.cos(srcAngle);
-         let startY = sourceNode.y + sRadius * Math.sin(srcAngle);
-         let endX = targetNode.x + tRadius * Math.cos(tgtAngle);
-         let endY = targetNode.y + tRadius * Math.sin(tgtAngle);
-
-         if (sourceNode.shape === 'rect' || sourceNode.shape === 'diamond') {
-            startX = sourceNode.x + (sRadius * 0.85) * Math.cos(srcAngle);
-            startY = sourceNode.y + (sRadius * 0.85) * Math.sin(srcAngle);
-         }
-         if (targetNode.shape === 'rect' || targetNode.shape === 'diamond') {
-            endX = targetNode.x + (tRadius * 0.85) * Math.cos(tgtAngle);
-            endY = targetNode.y + (tRadius * 0.85) * Math.sin(tgtAngle);
-         }
-
-         const labelX = 0.25 * startX + 0.5 * cpX + 0.25 * endX;
-         const labelY = 0.25 * startY + 0.5 * cpY + 0.25 * endY;
-         const pathData = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`;
-         
-         const arrowSize = 8 + strokeW * 1.5;
-         const arrowAngle = tgtAngle + Math.PI; 
-         const arrowP1 = `${endX},${endY}`;
-         const arrowP2 = `${endX - arrowSize * Math.cos(arrowAngle - 0.4)},${endY - arrowSize * Math.sin(arrowAngle - 0.4)}`;
-         const arrowP3 = `${endX - arrowSize * Math.cos(arrowAngle + 0.4)},${endY - arrowSize * Math.sin(arrowAngle + 0.4)}`;
-
-         return (
-            <g key={edge.id} onClick={(e) => { e.stopPropagation(); if (mode==='select') { setSelectedEdgeId(edge.id); setSelectedNodeIds([]); } }} className={`cursor-pointer group transition-opacity duration-300 ${isDimmedEdge ? 'opacity-10' : 'opacity-100'}`}>
-               <path d={pathData} fill="none" stroke="transparent" strokeWidth="25" />
-               <path d={pathData} fill="none" stroke={edgeColor} strokeWidth={strokeW} strokeDasharray={dashArray} strokeLinecap={strokeLinecap} className="transition-colors duration-200" />
-               <polygon points={`${arrowP1} ${arrowP2} ${arrowP3}`} fill={edgeColor} className="transition-colors duration-200" />
-               {edge.label && (
-               <g transform={`translate(${labelX}, ${labelY})`}>
-                  <text textAnchor="middle" dominantBaseline="central" fontSize="11" stroke="#f8fafc" strokeWidth="4" strokeLinejoin="round" className="font-bold pointer-events-none opacity-90 transition-opacity duration-200 group-hover:opacity-100">{edge.label.length > 18 ? edge.label.substring(0, 16) + '...' : edge.label}</text>
-                  <text textAnchor="middle" dominantBaseline="central" fontSize="11" fill={isSelected ? '#1d4ed8' : '#64748b'} className="font-bold pointer-events-none transition-colors duration-200 group-hover:fill-slate-600">{edge.label.length > 18 ? edge.label.substring(0, 16) + '...' : edge.label}</text>
-               </g>
-               )}
-            </g>
-         );
+      // --- Wiki-Link Interceptor ---
+      const renderNotesHTML = (notes) => {
+         if (!notes) return '*No notes added. Click here to edit.*';
+         const linkedNotes = notes.replace(/\[\[(.*?)\]\]/g, '<a href="#" data-topic="$1" class="text-blue-600 font-bold hover:underline bg-blue-50 px-1 rounded">[[ $1 ]]</a>');
+         return marked.parse(linkedNotes);
       };
 
-      const renderNodeShape = (node, radius, isSelected) => {
-         const strokeW = isSelected ? 5 : 3;
-         const fill = "white";
-         if (node.shape === 'rect') {
-            const size = radius * 1.6;
-            return <rect x={-size/2} y={-size/2} width={size} height={size} rx={8} fill={fill} stroke={node.color} strokeWidth={strokeW} filter="url(#shadow)" className="transition-colors duration-200" />;
+      const handleNotesClick = (e) => {
+         const topic = e.target.getAttribute('data-topic');
+         if (topic) {
+             e.preventDefault(); e.stopPropagation();
+             const target = nodes.find(n => n.label.toLowerCase() === topic.toLowerCase());
+             if (target) {
+                 setSelectedNodeIds([target.id]);
+                 setTransform({ x: window.innerWidth/2 - target.x * transform.scale, y: window.innerHeight/2 - target.y * transform.scale, scale: transform.scale });
+                 announce(`Mapsd to ${target.label}`);
+             } else {
+                 announce(`Link target "${topic}" not found.`);
+             }
+         } else {
+             setIsEditingNotes(true);
          }
-         if (node.shape === 'diamond') {
-            const size = radius * 1.2;
-            return <polygon points={`0,-${size} ${size},0 0,${size} -${size},0`} fill={fill} stroke={node.color} strokeWidth={strokeW} filter="url(#shadow)" strokeLinejoin="round" className="transition-colors duration-200" />;
-         }
-         return <circle r={radius} fill={fill} stroke={node.color} strokeWidth={strokeW} filter="url(#shadow)" className="transition-colors duration-200" />;
       };
 
-      // --- UI Variables ---
       const activeNode = selectedNodeIds.length === 1 ? nodes.find(n => n.id === selectedNodeIds[0]) : null;
       const activeEdge = edges.find(e => e.id === selectedEdgeId);
 
       return (
         <div className="flex h-screen w-screen bg-slate-50 overflow-hidden font-sans text-slate-800" onContextMenu={e => e.preventDefault()}>
           
+          <div aria-live="polite" aria-atomic="true" className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 bg-slate-800 text-white text-sm rounded-full shadow-lg transition-opacity duration-300 ${a11yMessage ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            {a11yMessage}
+          </div>
+
           {/* TOP TOOLBAR */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex gap-2 items-center bg-white p-2 rounded-2xl shadow-md border border-slate-200">
-             
-             {/* QUERY ENGINE BAR */}
              <div className="relative group flex items-center">
                 <Icon name="Terminal" size={16} className="absolute left-3 text-slate-400" />
-                <input 
-                   type="text" 
-                   placeholder="Search or write query..." 
-                   value={searchQuery} 
-                   onChange={e => setSearchQuery(e.target.value)} 
-                   className="pl-9 pr-16 py-1.5 bg-slate-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500 w-72 transition-all font-medium text-slate-700 placeholder:text-slate-400" 
-                />
-                
-                {/* SELECT RESULTS BUTTON */}
-                {isQueryActive && (
-                   <button 
-                      onClick={() => setSelectedNodeIds(Array.from(filteredNodesMap))}
-                      className="absolute right-1.5 py-0.5 px-2 bg-blue-100 text-blue-600 rounded text-[11px] font-bold hover:bg-blue-200 transition-colors"
-                   >
-                      Select
-                   </button>
-                )}
-
-                {/* QUERY HELPER DROPDOWN */}
-                <div className="absolute top-full mt-3 left-0 w-[340px] bg-white shadow-xl rounded-xl border border-slate-200 p-4 hidden group-focus-within:block text-xs text-slate-600 z-50">
-                   <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-1.5"><Icon name="Search" size={14}/> Graph Query Engine</h3>
-                   <p className="mb-3 text-slate-500">Filter the graph dynamically. Combine terms with spaces.</p>
-                   <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                      <div><code className="text-blue-600 bg-blue-50">shape:rect</code> <span className="ml-1">Match shapes</span></div>
-                      <div><code className="text-blue-600 bg-blue-50">color:blue</code> <span className="ml-1">Match colors</span></div>
-                      <div><code className="text-emerald-600 bg-emerald-50">edge:includes</code> <span className="ml-1">Match edge</span></div>
-                      <div><code className="text-emerald-600 bg-emerald-50">links:AI</code> <span className="ml-1">Target link</span></div>
-                      <div><code className="text-slate-600 bg-slate-100">label:Web</code> <span className="ml-1">Exact label</span></div>
-                      <div><code className="text-slate-600 bg-slate-100">"exact term"</code> <span className="ml-1">Use quotes</span></div>
-                   </div>
-                   <div className="mt-3 pt-3 border-t border-slate-100 text-slate-400">
-                      Example: <code className="text-slate-500">shape:circle links:"Deep Learning"</code>
-                   </div>
-                </div>
+                <input type="text" placeholder="Search or query graph..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-16 py-1.5 bg-slate-100 border-none rounded-xl text-sm w-72 focus:ring-2 focus:ring-blue-500 transition-all text-slate-700" title="Search by keyword, or use filters (e.g., color:blue, shape:circle, links:AI)" />
+                {isQueryActive && <button onClick={() => setSelectedNodeIds(Array.from(filteredNodesMap))} className="absolute right-1.5 py-0.5 px-2 bg-blue-100 text-blue-600 rounded text-[11px] font-bold" title="Select all matching nodes">Select</button>}
              </div>
-
              <div className="w-px h-6 bg-slate-200 mx-1"></div>
-             <button onClick={undo} disabled={historyIndex === 0} className={`p-2 rounded-lg transition-colors ${historyIndex === 0 ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'}`} title="Undo (Ctrl+Z)"><Icon name="Undo" size={18} /></button>
-             <button onClick={redo} disabled={historyIndex === history.length - 1} className={`p-2 rounded-lg transition-colors ${historyIndex === history.length - 1 ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'}`} title="Redo (Ctrl+Y)"><Icon name="Redo" size={18} /></button>
+             <button aria-label="Tidy Graph (Auto Layout)" onClick={tidyGraph} className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors focus:ring-2 focus:ring-amber-500" title="Auto-Layout Graph (Reorganizes all nodes)"><Icon name="Wand" size={18} /></button>
              <div className="w-px h-6 bg-slate-200 mx-1"></div>
-             <button onClick={() => setSnapToGrid(!snapToGrid)} className={`p-2 rounded-lg transition-colors ${snapToGrid ? 'bg-blue-100 text-blue-600' : 'text-slate-600 hover:bg-slate-100'}`} title="Snap to Grid"><Icon name="Grid" size={18} /></button>
+             <button onClick={undo} disabled={historyIndex === 0} className={`p-2 rounded-lg ${historyIndex === 0 ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'}`} title="Undo (Ctrl+Z / Cmd+Z)"><Icon name="Undo" size={18} /></button>
+             <button onClick={redo} disabled={historyIndex === history.length - 1} className={`p-2 rounded-lg ${historyIndex === history.length - 1 ? 'text-slate-300' : 'text-slate-600 hover:bg-slate-100'}`} title="Redo (Ctrl+Y / Cmd+Y)"><Icon name="Redo" size={18} /></button>
              <div className="w-px h-6 bg-slate-200 mx-1"></div>
-             <button onClick={exportPNG} className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors" title="Export PNG Image"><Icon name="Image" size={18} /></button>
+             <input type="file" ref={fileInputRef} onChange={handleImportJSON} accept=".json" className="hidden" />
+             <button onClick={() => fileInputRef.current.click()} className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors" title="Import Graph from JSON file"><Icon name="Upload" size={18} /></button>
+             <button onClick={exportJSON} className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors" title="Export Graph to JSON file"><Icon name="Download" size={18} /></button>
+             <button onClick={exportPNG} className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors" title="Export Graph as PNG Image"><Icon name="Image" size={18} /></button>
           </div>
 
           {/* LEFT TOOLBAR */}
           <div className="absolute left-6 top-6 z-10 flex flex-col gap-4 bg-white p-2 rounded-2xl shadow-xl border border-slate-100">
             <div className="flex flex-col gap-2">
-              <button onClick={() => { setMode('select'); setConnectingFrom(null); }} className={`p-3 rounded-xl transition-all ${mode === 'select' ? 'bg-blue-100 text-blue-600 shadow-inner' : 'text-slate-500 hover:bg-slate-100'}`} title="Select & Move Tool (Shift+Drag to multi-select)"><Icon name="MousePointer2" size={24} /></button>
-              <button onClick={() => setMode('connect')} className={`p-3 rounded-xl transition-all ${mode === 'connect' ? 'bg-amber-100 text-amber-600 shadow-inner' : 'text-slate-500 hover:bg-slate-100'}`} title="Connect Nodes Tool"><Icon name="LinkIcon" size={24} /></button>
+              <button aria-pressed={mode === 'select'} onClick={() => { setMode('select'); setConnectingFrom(null); }} className={`p-3 rounded-xl transition-all ${mode === 'select' ? 'bg-blue-100 text-blue-600 shadow-inner' : 'text-slate-500 hover:bg-slate-100'}`} title="Select Mode (Shift+Drag to multi-select, Alt+Drag to quick-connect)"><Icon name="MousePointer2" size={24} /></button>
+              <button aria-pressed={mode === 'connect'} onClick={() => setMode('connect')} className={`p-3 rounded-xl transition-all ${mode === 'connect' ? 'bg-amber-100 text-amber-600 shadow-inner' : 'text-slate-500 hover:bg-slate-100'}`} title="Connect Mode (Click and drag between nodes)"><Icon name="LinkIcon" size={24} /></button>
             </div>
             <div className="h-px bg-slate-100 my-1 w-full"></div>
-            <button onClick={() => addNode()} className="p-3 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm" title="Add New Node"><Icon name="Plus" size={24} /></button>
+            <button onClick={() => addNode()} className="p-3 rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all shadow-sm" title="Add New Node (or Double-click canvas)"><Icon name="Plus" size={24} /></button>
           </div>
 
           {/* MAIN CANVAS */}
           <main 
             className="flex-1 relative outline-none"
-            onWheel={handleWheel}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerUp}
-            style={{ cursor: mode === 'connect' ? 'crosshair' : (isPanning ? 'grabbing' : 'grab') }}
+            onWheel={handleWheel} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp} onDoubleClick={handleSvgDoubleClick}
+            style={{ cursor: mode === 'connect' ? 'crosshair' : (isPanning ? 'grabbing' : 'grab'), touchAction: 'none' }}
           >
             <svg ref={svgRef} className="w-full h-full">
               <defs>
                 <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="6" floodOpacity="0.15" /></filter>
+                <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+                   <feGaussianBlur stdDeviation="8" result="blur" />
+                   <feMerge>
+                      <feMergeNode in="blur"/>
+                      <feMergeNode in="blur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                   </feMerge>
+                </filter>
                 {snapToGrid && <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1.5" fill="#cbd5e1" /></pattern>}
+                
+                {edgeRenderData.map(edge => (
+                   <path key={`tp_${edge.id}`} id={`text_path_${edge.id}`} d={edge.textPathData} fill="none" stroke="none" />
+                ))}
               </defs>
 
               <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.scale})`}>
                 {snapToGrid && <rect id="bg-grid" x="-50000" y="-50000" width="100000" height="100000" fill="url(#grid)" />}
 
-                {/* EDGES */}
-                {visibleEdges.map(edge => renderPath(edge, selectedEdgeId === edge.id))}
+                {/* Draw Edges */}
+                {edgeRenderData.map(edge => (
+                     <g key={edge.id} onClick={(e) => { e.stopPropagation(); if (mode==='select') { setSelectedEdgeId(edge.id); setSelectedNodeIds([]); } }} className={`cursor-pointer group transition-opacity duration-300 ${edge.isDimmed ? 'opacity-10' : 'opacity-100'}`}>
+                        <title>{`${edge.srcLabel} ➔ ${edge.tgtLabel}${edge.label ? `\nRelationship: ${edge.label}` : ''}`}</title>
+                        <path d={edge.pathData} fill="none" stroke="transparent" strokeWidth="25" />
+                        <path d={edge.pathData} fill="none" stroke={edge.edgeColor} strokeWidth={edge.strokeW} strokeDasharray={edge.dashArray} strokeLinecap={edge.dashArray !== 'none' ? 'round' : 'butt'} />
+                        <polygon points={`${edge.endX},${edge.endY} ${edge.endX - edge.arrSz * Math.cos(edge.arrAngle - 0.4)},${edge.endY - edge.arrSz * Math.sin(edge.arrAngle - 0.4)} ${edge.endX - edge.arrSz * Math.cos(edge.arrAngle + 0.4)},${edge.endY - edge.arrSz * Math.sin(edge.arrAngle + 0.4)}`} fill={edge.edgeColor} />
+                        
+                        {edge.label && (
+                           <text dy="-6" dominantBaseline="central">
+                               <textPath href={`#text_path_${edge.id}`} startOffset="50%" textAnchor="middle" fontSize="11" stroke="#f8fafc" strokeWidth="4" strokeLinejoin="round" className="font-bold pointer-events-none opacity-90">{edge.label}</textPath>
+                               <textPath href={`#text_path_${edge.id}`} startOffset="50%" textAnchor="middle" fontSize="11" fill={selectedEdgeId === edge.id ? '#1d4ed8' : '#64748b'} className="font-bold pointer-events-none">{edge.label}</textPath>
+                           </text>
+                        )}
+                     </g>
+                ))}
 
-                {/* TEMPORARY CONNECTION LINE */}
-                {mode === 'connect' && connectingFrom && (
+                {connectingFrom && (
                   (() => {
-                    const src = nodes.find(n => n.id === connectingFrom);
-                    if (!src) return null;
+                    const src = nodes.find(n => n.id === connectingFrom); if (!src) return null;
                     return <line x1={src.x} y1={src.y} x2={mousePos.x} y2={mousePos.y} stroke="#f59e0b" strokeWidth="3" strokeDasharray="6 6" className="pointer-events-none" />;
                   })()
                 )}
 
-                {/* NODES */}
+                {/* Draw Nodes */}
                 {visibleNodes.map(node => {
                   const isSelected = selectedNodeIds.includes(node.id);
-                  const isConnecting = connectingFrom === node.id;
-                  const isDimmed = isQueryActive && !filteredNodesMap.has(node.id);
+                  const isConnecting = connectingFrom === node.id || hoveredNodeId === node.id;
+                  const matchesQuery = isQueryActive && filteredNodesMap.has(node.id);
+                  const isDimmed = isQueryActive && !matchesQuery;
                   const radius = getNodeRadius(node.id);
+                  const strokeW = isSelected ? 5 : 3;
                   
                   return (
                     <g 
                       key={node.id} transform={`translate(${node.x}, ${node.y})`}
                       onPointerDown={(e) => handleNodePointerDown(e, node.id)}
+                      onPointerEnter={() => setHoveredNodeId(node.id)}
+                      onPointerLeave={() => setHoveredNodeId(null)}
                       onDoubleClick={(e) => handleNodeDoubleClick(e, node.id)}
                       onContextMenu={(e) => handleContextMenu(e, node.id)}
-                      className={`${mode === 'select' ? 'cursor-grab active:cursor-grabbing' : 'cursor-crosshair'} transition-opacity duration-300 ${isDimmed ? 'opacity-10' : 'opacity-100'}`}
+                      className={`transition-opacity duration-300 ${isDimmed ? 'opacity-10' : 'opacity-100'} ${matchesQuery ? 'drop-shadow-[0_0_15px_rgba(59,130,246,0.6)]' : ''}`}
                     >
+                      <title>{`${node.label}${node.notes ? '\n\nNotes:\n' + node.notes.replace(/\[\[|\]\]/g, '') : ''}`}</title>
                       {(isSelected || isConnecting) && <circle r={radius + 12} fill="none" stroke={isConnecting ? '#f59e0b' : '#3b82f6'} strokeWidth="3" strokeDasharray="4 4" className="animate-[spin_4s_linear_infinite]" />}
-                      {renderNodeShape(node, radius, isSelected)}
+                      
+                      {node.shape === 'rect' && <rect x={-radius*0.8} y={-radius*0.8} width={radius*1.6} height={radius*1.6} rx={8} fill="white" stroke={node.color} strokeWidth={strokeW} filter={matchesQuery ? "url(#glow)" : "url(#shadow)"} />}
+                      {node.shape === 'diamond' && <polygon points={`0,-${radius*1.2} ${radius*1.2},0 0,${radius*1.2} -${radius*1.2},0`} fill="white" stroke={node.color} strokeWidth={strokeW} filter={matchesQuery ? "url(#glow)" : "url(#shadow)"} strokeLinejoin="round" />}
+                      {node.shape === 'circle' && <circle r={radius} fill="white" stroke={node.color} strokeWidth={strokeW} filter={matchesQuery ? "url(#glow)" : "url(#shadow)"} />}
+                      
                       <foreignObject x={-radius + 5} y={-radius + 5} width={(radius - 5) * 2} height={(radius - 5) * 2} className="pointer-events-none">
                         <div className="w-full h-full flex flex-col items-center justify-center text-center px-1">
-                          <span className="text-xs font-semibold break-words line-clamp-3 select-none" style={{ color: '#1e293b' }}>{node.label}</span>
+                          <span className="text-xs font-semibold break-words line-clamp-3 select-none text-slate-800">{node.label}</span>
                           {node.collapsed && <div className="mt-1 bg-slate-800 text-white text-[8px] px-1.5 py-0.5 rounded-full">+</div>}
                         </div>
                       </foreignObject>
@@ -673,41 +721,60 @@
               </g>
             </svg>
             
-            {/* HTML OVERLAYS (Marquee & Context Menu) */}
-            {marquee && (
-               <div className="selection-box" style={{
-                  left: Math.min(marquee.startX * transform.scale + transform.x, marquee.endX * transform.scale + transform.x),
-                  top: Math.min(marquee.startY * transform.scale + transform.y, marquee.endY * transform.scale + transform.y),
-                  width: Math.abs(marquee.endX - marquee.startX) * transform.scale,
-                  height: Math.abs(marquee.endY - marquee.startY) * transform.scale
-               }}/>
-            )}
+            {marquee && <div className="selection-box" style={{ left: Math.min(marquee.startX * transform.scale + transform.x, marquee.endX * transform.scale + transform.x), top: Math.min(marquee.startY * transform.scale + transform.y, marquee.endY * transform.scale + transform.y), width: Math.abs(marquee.endX - marquee.startX) * transform.scale, height: Math.abs(marquee.endY - marquee.startY) * transform.scale }}/>}
+
+            <div className="absolute bottom-6 right-6 w-48 h-32 bg-white/95 border border-slate-200 rounded-xl shadow-lg pointer-events-none overflow-hidden z-10" title="Graph Overview Minimap">
+               <svg width="100%" height="100%" viewBox={`${graphBounds.x} ${graphBounds.y} ${graphBounds.w} ${graphBounds.h}`} preserveAspectRatio="xMidYMid meet">
+                  {nodes.map(n => <circle key={`mm_${n.id}`} cx={n.x} cy={n.y} r={BASE_NODE_RADIUS} fill={n.color} opacity="0.6" />)}
+                  <rect x={-transform.x / transform.scale} y={-transform.y / transform.scale} width={window.innerWidth / transform.scale} height={window.innerHeight / transform.scale} fill="rgba(59,130,246,0.1)" stroke="#3b82f6" strokeWidth={graphBounds.w * 0.01} />
+               </svg>
+            </div>
 
             {contextMenu && (
                <div className="absolute z-50 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 py-2 text-sm text-slate-700 animate-in fade-in zoom-in-95 duration-100" style={{ left: contextMenu.x, top: contextMenu.y }}>
-                  <button onClick={() => { setMode('connect'); setConnectingFrom(contextMenu.nodeId); setContextMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2"><Icon name="LinkIcon" size={16}/> Connect</button>
-                  <button onClick={() => duplicateNode(contextMenu.nodeId)} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2"><Icon name="Copy" size={16}/> Duplicate</button>
+                  <button onClick={() => { setMode('connect'); setConnectingFrom(contextMenu.nodeId); setContextMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2" title="Start a connection from this node"><Icon name="LinkIcon" size={16}/> Connect</button>
+                  <button onClick={() => duplicateNode(contextMenu.nodeId)} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2" title="Create a copy of this node"><Icon name="Copy" size={16}/> Duplicate</button>
                   <div className="h-px bg-slate-100 my-1"></div>
-                  <button onClick={() => handleNodeDoubleClick({stopPropagation:()=>{}}, contextMenu.nodeId)} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2"><Icon name="EyeOff" size={16}/> Toggle Collapse</button>
-                  <button onClick={() => deleteSelected()} className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2"><Icon name="Trash2" size={16}/> Delete</button>
+                  <button onClick={() => handleNodeDoubleClick({stopPropagation:()=>{}}, contextMenu.nodeId)} className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2" title="Show/Hide nodes connected to this one"><Icon name="EyeOff" size={16}/> Toggle Collapse</button>
+                  <button onClick={() => deleteSelected()} className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2" title="Permanently remove this node"><Icon name="Trash2" size={16}/> Delete</button>
                </div>
             )}
           </main>
 
-          {/* RIGHT SIDEBAR - PROPERTIES */}
+          {/* RIGHT SIDEBAR */}
           <aside className={`bg-white border-l border-slate-200 shadow-2xl transition-all duration-300 ease-in-out z-20 flex flex-col ${(selectedNodeIds.length > 0 || selectedEdgeId) ? 'w-80 translate-x-0' : 'w-0 translate-x-full overflow-hidden border-transparent'}`}>
             <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 min-w-[320px]">
               <h2 className="font-semibold text-slate-800 flex items-center gap-2"><Icon name="Settings2" size={18} className="text-slate-500" /> Properties</h2>
-              <button onClick={deleteSelected} className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors"><Icon name="Trash2" size={18} /></button>
+              <button onClick={deleteSelected} className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Delete Selected Items (Backspace/Delete)"><Icon name="Trash2" size={18} /></button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 min-w-[320px]">
-              {/* MULTI-SELECT VIEW */}
+              
+              {/* BULK EDIT VIEW */}
               {selectedNodeIds.length > 1 && (
-                 <div className="space-y-4 text-center py-8">
-                    <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4"><Icon name="Box" size={32} /></div>
-                    <h3 className="font-bold text-slate-700">{selectedNodeIds.length} Nodes Selected</h3>
-                    <p className="text-sm text-slate-500">Drag to move them together, or press delete to remove them.</p>
+                 <div className="space-y-6">
+                    <div className="text-center py-4 border-b border-slate-100">
+                       <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-2"><Icon name="Box" size={24} /></div>
+                       <h3 className="font-bold text-slate-700">{selectedNodeIds.length} Nodes Selected</h3>
+                    </div>
+                    
+                    <div className="space-y-3">
+                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Icon name="Palette" size={14} /> Bulk Color</label>
+                       <div className="flex flex-wrap gap-1.5">
+                         {COLORS.map(color => (
+                           <button key={color} onClick={() => { setNodes(nodes.map(n => selectedNodeIds.includes(n.id) ? { ...n, color } : n)); pushHistory(nodes, edges); }} className="w-6 h-6 rounded-full hover:scale-110 transition-transform shadow-sm" style={{ backgroundColor: color }} title={`Apply ${color} color`} />
+                         ))}
+                       </div>
+                    </div>
+
+                    <div className="space-y-3">
+                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Bulk Shape</label>
+                       <div className="flex gap-2">
+                          <button onClick={() => { setNodes(nodes.map(n => selectedNodeIds.includes(n.id) ? { ...n, shape: 'circle' } : n)); pushHistory(nodes, edges); }} className="p-2 flex-1 flex justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50" title="Apply Circle shape"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></button>
+                          <button onClick={() => { setNodes(nodes.map(n => selectedNodeIds.includes(n.id) ? { ...n, shape: 'rect' } : n)); pushHistory(nodes, edges); }} className="p-2 flex-1 flex justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50" title="Apply Rectangle shape"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="4"/></svg></button>
+                          <button onClick={() => { setNodes(nodes.map(n => selectedNodeIds.includes(n.id) ? { ...n, shape: 'diamond' } : n)); pushHistory(nodes, edges); }} className="p-2 flex-1 flex justify-center rounded border border-slate-200 text-slate-400 hover:bg-slate-50" title="Apply Hexagon/Diamond shape"><Icon name="Hexagon" size={16}/></button>
+                       </div>
+                    </div>
                  </div>
               )}
 
@@ -716,7 +783,7 @@
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Icon name="Type" size={14} /> Label</label>
-                    <input type="text" value={activeNode.label} onChange={(e) => setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, label: e.target.value } : n))} onBlur={() => pushHistory(nodes, edges)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
+                    <input type="text" value={activeNode.label} onChange={(e) => setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, label: e.target.value } : n))} onBlur={() => pushHistory(nodes, edges)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" title="Change the display name of this node" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -724,29 +791,26 @@
                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Icon name="Palette" size={14} /> Color</label>
                        <div className="flex flex-wrap gap-1.5">
                          {COLORS.map(color => (
-                           <button key={color} onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, color } : n)); pushHistory(nodes, edges); }} className={`w-6 h-6 rounded-full ${activeNode.color === color ? 'ring-2 ring-offset-2 ring-slate-400' : ''}`} style={{ backgroundColor: color }} />
+                           <button key={color} onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, color } : n)); pushHistory(nodes, edges); }} className={`w-6 h-6 rounded-full ${activeNode.color === color ? 'ring-2 ring-offset-2 ring-slate-400' : ''}`} style={{ backgroundColor: color }} title={`Change color to ${color}`} />
                          ))}
                        </div>
                      </div>
                      <div className="space-y-3">
-                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">Shape</label>
+                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Shape</label>
                        <div className="flex gap-2">
-                          <button onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, shape: 'circle' } : n)); }} className={`p-2 rounded border ${activeNode.shape === 'circle' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-400'}`}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></button>
-                          <button onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, shape: 'rect' } : n)); }} className={`p-2 rounded border ${activeNode.shape === 'rect' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-400'}`}><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="4"/></svg></button>
-                          <button onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, shape: 'diamond' } : n)); }} className={`p-2 rounded border ${activeNode.shape === 'diamond' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-400'}`}><Icon name="Hexagon" size={16}/></button>
+                          <button onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, shape: 'circle' } : n)); }} className={`p-2 rounded border ${activeNode.shape === 'circle' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-400'}`} title="Change shape to Circle"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></button>
+                          <button onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, shape: 'rect' } : n)); }} className={`p-2 rounded border ${activeNode.shape === 'rect' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-400'}`} title="Change shape to Rectangle"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="4"/></svg></button>
+                          <button onClick={() => { setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, shape: 'diamond' } : n)); }} className={`p-2 rounded border ${activeNode.shape === 'diamond' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-200 text-slate-400'}`} title="Change shape to Hexagon/Diamond"><Icon name="Hexagon" size={16}/></button>
                        </div>
                      </div>
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Icon name="FileText" size={14} /> Notes (Markdown)</label>
-                       <button onClick={() => setMarkdownMode(!markdownMode)} className="text-xs text-blue-600 hover:underline">{markdownMode ? 'Edit' : 'Preview'}</button>
-                    </div>
-                    {!markdownMode ? (
-                      <textarea value={activeNode.notes || ''} onChange={(e) => setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, notes: e.target.value } : n))} onBlur={() => pushHistory(nodes, edges)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm min-h-[160px] resize-y focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Add markdown notes..." />
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Icon name="FileText" size={14} /> Notes (Markdown + [[Links]])</label>
+                    {isEditingNotes ? (
+                      <textarea autoFocus value={activeNode.notes || ''} onChange={(e) => setNodes(nodes.map(n => n.id === activeNode.id ? { ...n, notes: e.target.value } : n))} onBlur={() => { pushHistory(nodes, edges); setIsEditingNotes(false); }} className="w-full p-2.5 bg-white border border-blue-400 rounded-xl text-sm min-h-[220px] resize-y focus:outline-none focus:ring-4 focus:ring-blue-500/20" placeholder="Type [[Node Name]] to link..." title="Add detailed Markdown notes here. Type [[Name]] to create wiki-links." />
                     ) : (
-                      <div className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-sm min-h-[160px] prose prose-slate prose-sm" dangerouslySetInnerHTML={{ __html: marked.parse(activeNode.notes || '*No notes added yet.*') }} />
+                      <div onClick={handleNotesClick} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-sm min-h-[220px] prose prose-slate prose-sm cursor-text hover:bg-slate-100/50 transition-colors" dangerouslySetInnerHTML={{ __html: renderNotesHTML(activeNode.notes) }} title="Click to edit. Formats with Markdown and [[WikiLinks]]" />
                     )}
                   </div>
                 </div>
@@ -757,13 +821,13 @@
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Relationship Label</label>
-                    <input type="text" value={activeEdge.label || ''} onChange={(e) => setEdges(edges.map(edge => edge.id === activeEdge.id ? { ...edge, label: e.target.value } : edge))} onBlur={() => pushHistory(nodes, edges)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="text" value={activeEdge.label || ''} onChange={(e) => setEdges(edges.map(edge => edge.id === activeEdge.id ? { ...edge, label: e.target.value } : edge))} onBlur={() => pushHistory(nodes, edges)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" title="Describe the relationship between these nodes" />
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Icon name="Activity" size={14} /> Edge Weight</label>
                     <div className="flex items-center gap-3">
-                      <input type="range" min="1" max="5" step="1" value={activeEdge.weight || 1} onChange={(e) => setEdges(edges.map(edge => edge.id === activeEdge.id ? { ...edge, weight: parseInt(e.target.value) } : edge))} onMouseUp={() => pushHistory(nodes, edges)} className="flex-1 accent-blue-500 cursor-pointer" />
+                      <input type="range" min="1" max="5" step="1" value={activeEdge.weight || 1} onChange={(e) => setEdges(edges.map(edge => edge.id === activeEdge.id ? { ...edge, weight: parseInt(e.target.value) } : edge))} onMouseUp={() => pushHistory(nodes, edges)} className="flex-1 accent-blue-500 cursor-pointer" title="Adjust the thickness/importance of this connection" />
                       <span className="text-sm font-medium text-slate-600 w-6 text-center">{activeEdge.weight || 1}</span>
                     </div>
                   </div>
@@ -772,7 +836,7 @@
                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Line Style</label>
                      <div className="flex gap-2">
                         {['solid', 'dashed', 'dotted'].map(style => (
-                           <button key={style} onClick={() => { setEdges(edges.map(e => e.id === activeEdge.id ? { ...e, style } : e)); pushHistory(nodes, edges); }} className={`flex-1 py-1.5 text-xs font-medium rounded border ${activeEdge.style === style ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>{style.charAt(0).toUpperCase() + style.slice(1)}</button>
+                           <button key={style} onClick={() => { setEdges(edges.map(e => e.id === activeEdge.id ? { ...e, style } : e)); pushHistory(nodes, edges); }} className={`flex-1 py-1.5 text-xs font-medium rounded border ${activeEdge.style === style ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`} title={`Change to ${style} line`}>{style.charAt(0).toUpperCase() + style.slice(1)}</button>
                         ))}
                      </div>
                   </div>
@@ -783,7 +847,7 @@
                   </div>
                   
                   <div className="pt-4 border-t border-slate-100">
-                    <button onClick={() => { const newEdges = edges.map(edge => edge.id === activeEdge.id ? { ...edge, source: edge.target, target: edge.source } : edge); setEdges(newEdges); pushHistory(nodes, newEdges); }} className="w-full py-2.5 px-4 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                    <button onClick={() => { const newEdges = edges.map(edge => edge.id === activeEdge.id ? { ...edge, source: edge.target, target: edge.source } : edge); setEdges(newEdges); pushHistory(nodes, newEdges); }} className="w-full py-2.5 px-4 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2" title="Swap the source and target of this arrow">
                       Reverse Direction
                     </button>
                   </div>
@@ -798,6 +862,4 @@
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<KnowledgeGraphApp />);
-  </script>
-</body>
-</html>
+  </script></body></html>

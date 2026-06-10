@@ -593,7 +593,7 @@
          }; 
          img.onerror = () => {
              announce("Failed to export PNG. See console for details.");
-             console.error("The generated SVG contains invalid XML nodes.");
+             console.error("The generated SVG contains invalid XML nodes or un-namespaced HTML.");
          };
          img.src = url;
       };
@@ -698,8 +698,8 @@
                         
                         {edge.label && (
                            <text dy="-6" dominantBaseline="central">
-                               <textPath href={`#text_path_${edge.id}`} startOffset="50%" textAnchor="middle" fontSize="11" stroke="#f8fafc" strokeWidth="4" strokeLinejoin="round" className="font-bold pointer-events-none opacity-90">{edge.label}</textPath>
-                               <textPath href={`#text_path_${edge.id}`} startOffset="50%" textAnchor="middle" fontSize="11" fill={selectedEdgeId === edge.id ? '#1d4ed8' : '#64748b'} className="font-bold pointer-events-none">{edge.label}</textPath>
+                               <textPath href={`#text_path_${edge.id}`} startOffset="50%" textAnchor="middle" fontSize="11" fontWeight="bold" opacity="0.9" stroke="#f8fafc" strokeWidth="4" strokeLinejoin="round" className="pointer-events-none">{edge.label}</textPath>
+                               <textPath href={`#text_path_${edge.id}`} startOffset="50%" textAnchor="middle" fontSize="11" fontWeight="bold" fill={selectedEdgeId === edge.id ? '#1d4ed8' : '#64748b'} className="pointer-events-none">{edge.label}</textPath>
                            </text>
                         )}
                      </g>
@@ -739,9 +739,9 @@
                       {node.shape === 'circle' && <circle r={radius} fill="white" stroke={node.color} strokeWidth={strokeW} filter={matchesQuery ? "url(#glow)" : "url(#shadow)"} />}
                       
                       <foreignObject x={-radius + 5} y={-radius + 5} width={(radius - 5) * 2} height={(radius - 5) * 2} className="pointer-events-none">
-                        <div xmlns="http://www.w3.org/1999/xhtml" className="w-full h-full flex flex-col items-center justify-center text-center px-1">
-                          <span className="text-xs font-semibold break-words line-clamp-3 select-none text-slate-800">{node.label}</span>
-                          {node.collapsed && <div className="mt-1 bg-slate-800 text-white text-[8px] px-1.5 py-0.5 rounded-full">+</div>}
+                        <div xmlns="http://www.w3.org/1999/xhtml" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 4px' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 600, wordBreak: 'break-word', userSelect: 'none', color: '#1e293b', fontFamily: 'sans-serif' }}>{node.label}</span>
+                          {node.collapsed && <div style={{ marginTop: '4px', backgroundColor: '#1e293b', color: 'white', fontSize: '8px', padding: '2px 6px', borderRadius: '9999px', fontFamily: 'sans-serif' }}>+</div>}
                         </div>
                       </foreignObject>
                     </g>

@@ -556,17 +556,46 @@
       };
 
       const exportPNG = () => {
-         const svgString = new XMLSerializer().serializeToString(svgRef.current);
+         const svgNode = svgRef.current;
+         const rect = svgNode.getBoundingClientRect();
+         
+         // Temporarily attach explicit dimensions for the standalone image parser
+         svgNode.setAttribute('width', rect.width);
+         svgNode.setAttribute('height', rect.height);
+         
+         const svgString = new XMLSerializer().serializeToString(svgNode);
+         
+         // Remove them immediately so the graph remains responsive
+         svgNode.removeAttribute('width');
+         svgNode.removeAttribute('height');
+         
          const canvas = document.createElement("canvas");
          const cleanSvgString = svgString.replace(/<rect id="bg-grid"[\s\S]*?\/>/, '');
-         const img = new Image(); const svg = new Blob([cleanSvgString], {type: "image/svg+xml;charset=utf-8"});
+         const img = new Image(); 
+         const svg = new Blob([cleanSvgString], {type: "image/svg+xml;charset=utf-8"});
          const url = URL.createObjectURL(svg);
+         
          img.onload = function() {
-            canvas.width = window.innerWidth * 2; canvas.height = window.innerHeight * 2;
-            const ctx = canvas.getContext("2d"); ctx.fillStyle = "#f8fafc"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.scale(2, 2); ctx.drawImage(img, 0, 0);
-            const a = document.createElement("a"); a.download = `graph-${Date.now()}.png`; a.href = canvas.toDataURL("image/png"); a.click();
-            URL.revokeObjectURL(url); announce("Graph exported as PNG.");
-         }; img.src = url;
+            canvas.width = rect.width * 2; 
+            canvas.height = rect.height * 2;
+            const ctx = canvas.getContext("2d"); 
+            ctx.fillStyle = "#f8fafc"; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height); 
+            ctx.scale(2, 2); 
+            ctx.drawImage(img, 0, 0);
+            
+            const a = document.createElement("a"); 
+            a.download = `graph-${Date.now()}.png`; 
+            a.href = canvas.toDataURL("image/png"); 
+            a.click();
+            URL.revokeObjectURL(url); 
+            announce("Graph exported as PNG.");
+         }; 
+         img.onerror = () => {
+             announce("Failed to export PNG. See console for details.");
+             console.error("The generated SVG contains invalid XML nodes.");
+         };
+         img.src = url;
       };
 
       // --- Wiki-Link Interceptor ---
@@ -638,7 +667,7 @@
             onWheel={handleWheel} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerLeave={handlePointerUp} onDoubleClick={handleSvgDoubleClick}
             style={{ cursor: mode === 'connect' ? 'crosshair' : (isPanning ? 'grabbing' : 'grab'), touchAction: 'none' }}
           >
-            <svg ref={svgRef} className="w-full h-full">
+            <svg ref={svgRef} className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="6" floodOpacity="0.15" /></filter>
                 <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
@@ -710,7 +739,7 @@
                       {node.shape === 'circle' && <circle r={radius} fill="white" stroke={node.color} strokeWidth={strokeW} filter={matchesQuery ? "url(#glow)" : "url(#shadow)"} />}
                       
                       <foreignObject x={-radius + 5} y={-radius + 5} width={(radius - 5) * 2} height={(radius - 5) * 2} className="pointer-events-none">
-                        <div className="w-full h-full flex flex-col items-center justify-center text-center px-1">
+                        <div xmlns="http://www.w3.org/1999/xhtml" className="w-full h-full flex flex-col items-center justify-center text-center px-1">
                           <span className="text-xs font-semibold break-words line-clamp-3 select-none text-slate-800">{node.label}</span>
                           {node.collapsed && <div className="mt-1 bg-slate-800 text-white text-[8px] px-1.5 py-0.5 rounded-full">+</div>}
                         </div>
